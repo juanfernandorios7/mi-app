@@ -26,18 +26,19 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const [newProject, setNewProject] = useState({
-    nombre: "", cliente_nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico",
+    nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente",
   });
   const [newProjectTask, setNewProjectTask] = useState({ titulo: "", tiempo_estimado: 60 });
 
   const addProject = async () => {
-    if (!newProject.nombre || !newProject.valor_total) return;
+    if (!newProject.nombre) return;
     setSaving(true);
     const color = ACCENT_COLORS[proyectos.length % ACCENT_COLORS.length];
     const { data, error } = await supabase
       .from("proyectos")
       .insert({
         nombre: newProject.nombre,
+        tipo: newProject.tipo,
         valor_total: Number(newProject.valor_total) || 0,
         currency: newProject.currency,
         tipo_cobro: newProject.tipo_cobro,
@@ -51,7 +52,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
     if (!error && data) {
       setProyectos(ps => [...ps, data as Proyecto]);
-      setNewProject({ nombre: "", cliente_nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico" });
+      setNewProject({ nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente" });
       setShowAddProject(false);
       onDataChange();
     }
@@ -134,11 +135,19 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
       {showAddProject && (
         <div className="fade-up" style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: 16, padding: 20, marginBottom: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 100px", gap: 12, marginBottom: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
             <input placeholder="Nombre proyecto" value={newProject.nombre}
               onChange={e => setNewProject({ ...newProject, nombre: e.target.value })} style={inputStyle} />
-            <input placeholder="Valor cobrado" type="number" value={newProject.valor_total}
+            <select value={newProject.tipo}
+              onChange={e => setNewProject({ ...newProject, tipo: e.target.value })} style={inputStyle}>
+              <option value="cliente">Cliente</option>
+              <option value="propio">Propio</option>
+              <option value="proposito">Propósito</option>
+            </select>
+            <input placeholder="Valor cobrado (opcional)" type="number" value={newProject.valor_total}
               onChange={e => setNewProject({ ...newProject, valor_total: e.target.value })} style={inputStyle} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 12, marginBottom: 12 }}>
             <select value={newProject.tipo_cobro}
               onChange={e => setNewProject({ ...newProject, tipo_cobro: e.target.value })} style={inputStyle}>
               <option value="unico">Único</option>
@@ -156,8 +165,22 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {proyectos.map(p => {
+      {(["cliente", "propio", "proposito"] as const).map(tipo => {
+        const grupo = proyectos.filter(p => p.tipo === tipo);
+        if (grupo.length === 0) return null;
+        const labels: Record<string, string> = { cliente: "Clientes", propio: "Propios", proposito: "Propósito" };
+        const colors: Record<string, string> = { cliente: "#c8922a", propio: "#7c9e6e", proposito: "#7b9ec8" };
+        return (
+          <div key={tipo} style={{ marginBottom: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: colors[tipo] }} />
+              <span style={{ fontSize: 11, color: colors[tipo], letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
+                {labels[tipo]}
+              </span>
+              <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {grupo.map(p => {
           const r = getRentabilidad(p);
           const cobrado = p.valor_total || p.valor_mensual || 0;
           const ratePerH = Math.round(cobrado / (p.horas_logged || 1));
@@ -351,7 +374,10 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
             </div>
           );
         })}
-      </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

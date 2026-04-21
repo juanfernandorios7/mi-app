@@ -1,4 +1,5 @@
 export type ClienteTipo = "recurrente" | "unico";
+export type ProyectoTipo = "cliente" | "propio" | "proposito";
 export type ProyectoEstado = "activo" | "pausado" | "finalizado";
 export type Prioridad = "alta" | "media" | "baja";
 export type TipoCobro = "recurrente" | "unico";
@@ -22,6 +23,7 @@ export interface Proyecto {
   prioridad: Prioridad;
   fecha_inicio?: string;
   fecha_fin?: string;
+  tipo: ProyectoTipo;
   tipo_cobro: TipoCobro;
   valor_mensual: number;
   valor_total: number;
