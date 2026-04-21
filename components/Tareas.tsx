@@ -26,6 +26,11 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
   const [trackingStart, setTrackingStart] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [modalTab, setModalTab] = useState<"una" | "masiva">("una");
+  const [bulkText, setBulkText] = useState("");
+  const [bulkProyecto, setBulkProyecto] = useState("");
+  const [bulkFecha, setBulkFecha] = useState(today());
+  const [bulkTiempo, setBulkTiempo] = useState(1);
 
   const todayTasks = tareas.filter(t => t.fecha === today());
   const doneTasks = todayTasks.filter(t => t.estado === "completada").length;
@@ -98,6 +103,37 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
     setSaving(false);
   };
 
+  const addBulkTareas = async () => {
+    const lineas = bulkText
+      .split("\n")
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+    if (lineas.length === 0) return;
+    setSaving(true);
+    const rows = lineas.map(titulo => ({
+      titulo,
+      proyecto_id: bulkProyecto || null,
+      estado: "pendiente",
+      prioridad: "media",
+      fecha: bulkFecha || today(),
+      tiempo_estimado: Math.round(bulkTiempo * 60),
+      tiempo_real: 0,
+    }));
+    const { data, error } = await supabase.from("tareas").insert(rows).select();
+    if (!error && data) {
+      setTareas(ts => [...ts, ...(data as Tarea[])]);
+      setBulkText("");
+      setBulkProyecto("");
+      setBulkFecha(today());
+      setBulkTiempo(1);
+      setShowAdd(false);
+      onTareasChange();
+    }
+    setSaving(false);
+  };
+
+  const bulkLines = bulkText.split("\n").filter(l => l.trim().length > 0).length;
+
   const field: React.CSSProperties = {
     background: "#111", border: "1px solid #2a2a2a", borderRadius: 12,
     padding: "14px 16px", color: "#e8e0d0", fontSize: 14,
@@ -146,101 +182,134 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
               maxHeight: "90vh", overflowY: "auto",
             }}
           >
-            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, marginBottom: 24, color: "#e8e0d0" }}>
+            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, marginBottom: 20, color: "#e8e0d0" }}>
               Nueva tarea
             </h3>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <input
-                placeholder="Título *"
-                value={newTarea.titulo}
-                onChange={e => setNewTarea({ ...newTarea, titulo: e.target.value })}
-                style={field}
-                autoFocus
-              />
-
-              <input
-                placeholder="Descripción (opcional)"
-                value={newTarea.descripcion}
-                onChange={e => setNewTarea({ ...newTarea, descripcion: e.target.value })}
-                style={field}
-              />
-
-              <select
-                value={newTarea.proyecto_id}
-                onChange={e => setNewTarea({ ...newTarea, proyecto_id: e.target.value })}
-                style={field}
-              >
-                <option value="">Selecciona proyecto *</option>
-                {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-              </select>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                <select value={newTarea.estado} onChange={e => setNewTarea({ ...newTarea, estado: e.target.value })} style={field}>
-                  <option value="pendiente">pendiente</option>
-                  <option value="en_progreso">en progreso</option>
-                  <option value="completada">completada</option>
-                </select>
-                <select value={newTarea.prioridad} onChange={e => setNewTarea({ ...newTarea, prioridad: e.target.value })} style={field}>
-                  <option value="alta">alta</option>
-                  <option value="media">media</option>
-                  <option value="baja">baja</option>
-                </select>
-                <input
-                  type="date"
-                  value={newTarea.fecha}
-                  onChange={e => setNewTarea({ ...newTarea, fecha: e.target.value })}
-                  style={{ ...field, colorScheme: "dark" }}
-                />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo estimado (h)</label>
-                  <input
-                    type="number" min="0" step="0.5"
-                    value={newTarea.tiempo_estimado}
-                    onChange={e => setNewTarea({ ...newTarea, tiempo_estimado: Number(e.target.value) })}
-                    style={field}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo real (h)</label>
-                  <input
-                    type="number" min="0" step="0.5"
-                    value={newTarea.tiempo_real || ""}
-                    onChange={e => setNewTarea({ ...newTarea, tiempo_real: Number(e.target.value) })}
-                    placeholder=""
-                    style={field}
-                  />
-                </div>
-              </div>
+            {/* Pestañas */}
+            <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#0f0f0f", borderRadius: 10, padding: 4 }}>
+              {(["una", "masiva"] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setModalTab(tab)}
+                  style={{
+                    flex: 1, padding: "8px 0", borderRadius: 8, border: "none",
+                    background: modalTab === tab ? "#1e1e1e" : "transparent",
+                    color: modalTab === tab ? "#c8922a" : "#555",
+                    fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {tab === "una" ? "Una tarea" : "Carga masiva"}
+                </button>
+              ))}
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 28 }}>
-              <button
-                onClick={addTarea}
-                disabled={saving || !newTarea.titulo}
-                style={{
-                  background: saving || !newTarea.titulo ? "#2a2a2a" : "#c8922a",
-                  border: "none", color: saving || !newTarea.titulo ? "#555" : "#0a0a0a",
-                  padding: "12px 24px", borderRadius: 10,
-                  fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
-                  cursor: saving || !newTarea.titulo ? "not-allowed" : "pointer",
-                }}
-              >
-                {saving ? "Guardando..." : "Guardar tarea"}
-              </button>
-              <button
-                onClick={() => setShowAdd(false)}
-                style={{
-                  background: "transparent", border: "none",
-                  color: "#555", fontSize: 14, fontFamily: "'Syne', sans-serif",
-                }}
-              >
-                Cancelar
-              </button>
-            </div>
+            {/* ── UNA TAREA ── */}
+            {modalTab === "una" && (
+              <>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <input
+                    placeholder="Título *"
+                    value={newTarea.titulo}
+                    onChange={e => setNewTarea({ ...newTarea, titulo: e.target.value })}
+                    style={field}
+                    autoFocus
+                  />
+                  <input
+                    placeholder="Descripción (opcional)"
+                    value={newTarea.descripcion}
+                    onChange={e => setNewTarea({ ...newTarea, descripcion: e.target.value })}
+                    style={field}
+                  />
+                  <select value={newTarea.proyecto_id} onChange={e => setNewTarea({ ...newTarea, proyecto_id: e.target.value })} style={field}>
+                    <option value="">Selecciona proyecto</option>
+                    {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  </select>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                    <select value={newTarea.estado} onChange={e => setNewTarea({ ...newTarea, estado: e.target.value })} style={field}>
+                      <option value="pendiente">pendiente</option>
+                      <option value="en_progreso">en progreso</option>
+                      <option value="completada">completada</option>
+                    </select>
+                    <select value={newTarea.prioridad} onChange={e => setNewTarea({ ...newTarea, prioridad: e.target.value })} style={field}>
+                      <option value="alta">alta</option>
+                      <option value="media">media</option>
+                      <option value="baja">baja</option>
+                    </select>
+                    <input type="date" value={newTarea.fecha} onChange={e => setNewTarea({ ...newTarea, fecha: e.target.value })} style={{ ...field, colorScheme: "dark" }} />
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo estimado (h)</label>
+                      <input type="number" min="0" step="0.5" value={newTarea.tiempo_estimado} onChange={e => setNewTarea({ ...newTarea, tiempo_estimado: Number(e.target.value) })} style={field} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo real (h)</label>
+                      <input type="number" min="0" step="0.5" value={newTarea.tiempo_real || ""} onChange={e => setNewTarea({ ...newTarea, tiempo_real: Number(e.target.value) })} style={field} />
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 28 }}>
+                  <button onClick={addTarea} disabled={saving || !newTarea.titulo} style={{
+                    background: saving || !newTarea.titulo ? "#2a2a2a" : "#c8922a",
+                    border: "none", color: saving || !newTarea.titulo ? "#555" : "#0a0a0a",
+                    padding: "12px 24px", borderRadius: 10,
+                    fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+                    cursor: saving || !newTarea.titulo ? "not-allowed" : "pointer",
+                  }}>
+                    {saving ? "Guardando..." : "Guardar tarea"}
+                  </button>
+                  <button onClick={() => setShowAdd(false)} style={{ background: "transparent", border: "none", color: "#555", fontSize: 14, fontFamily: "'Syne', sans-serif" }}>
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* ── CARGA MASIVA ── */}
+            {modalTab === "masiva" && (
+              <>
+                <p style={{ fontSize: 12, color: "#555", marginBottom: 16, fontFamily: "'DM Mono', monospace", lineHeight: 1.6 }}>
+                  Pega o escribe una tarea por línea. Puedes pedirle a Claude que te resuma las tareas de tu reunión en este formato.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <textarea
+                    placeholder={"Configurar Meta Ads campaña retargeting\nRevisar copy homepage Shopify\nInforme mensual Google Ads\nAjustar automatizaciones CRM"}
+                    value={bulkText}
+                    onChange={e => setBulkText(e.target.value)}
+                    autoFocus
+                    rows={7}
+                    style={{ ...field, resize: "vertical", lineHeight: 1.7 }}
+                  />
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px", gap: 12 }}>
+                    <select value={bulkProyecto} onChange={e => setBulkProyecto(e.target.value)} style={field}>
+                      <option value="">Proyecto (opcional)</option>
+                      {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                    </select>
+                    <input type="date" value={bulkFecha} onChange={e => setBulkFecha(e.target.value)} style={{ ...field, colorScheme: "dark" }} />
+                    <div>
+                      <label style={{ fontSize: 10, color: "#555", display: "block", marginBottom: 6 }}>h/tarea</label>
+                      <input type="number" min="0.5" step="0.5" value={bulkTiempo} onChange={e => setBulkTiempo(Number(e.target.value))} style={field} />
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 28 }}>
+                  <button onClick={addBulkTareas} disabled={saving || bulkLines === 0} style={{
+                    background: saving || bulkLines === 0 ? "#2a2a2a" : "#c8922a",
+                    border: "none", color: saving || bulkLines === 0 ? "#555" : "#0a0a0a",
+                    padding: "12px 24px", borderRadius: 10,
+                    fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+                    cursor: saving || bulkLines === 0 ? "not-allowed" : "pointer",
+                  }}>
+                    {saving ? "Creando..." : bulkLines > 0 ? `Crear ${bulkLines} tarea${bulkLines > 1 ? "s" : ""}` : "Crear tareas"}
+                  </button>
+                  <button onClick={() => setShowAdd(false)} style={{ background: "transparent", border: "none", color: "#555", fontSize: 14, fontFamily: "'Syne', sans-serif" }}>
+                    Cancelar
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
