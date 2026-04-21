@@ -131,7 +131,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
         <div
           onClick={() => setShowAdd(false)}
           style={{
-            position: "fixed", inset: 0, background: "#000000aa",
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            background: "#000000bb",
             display: "flex", alignItems: "center", justifyContent: "center",
             zIndex: 200, padding: 24,
           }}
@@ -142,6 +143,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
             style={{
               background: "#111", border: "1px solid #2a2a2a", borderRadius: 20,
               padding: 36, width: "100%", maxWidth: 560,
+              maxHeight: "90vh", overflowY: "auto",
             }}
           >
             <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, marginBottom: 24, color: "#e8e0d0" }}>

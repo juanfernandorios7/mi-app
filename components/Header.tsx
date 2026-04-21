@@ -32,7 +32,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
       position: "sticky",
       top: 0,
       background: "#0a0a0a",
-      zIndex: 100,
+      zIndex: 50,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{
