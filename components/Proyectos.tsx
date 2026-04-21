@@ -605,11 +605,14 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                               ) : (
                                 <span
                                   onClick={e => { e.stopPropagation(); openEditTime(task); }}
-                                  style={{ fontSize: 11, color: task.tiempo_real > 0 ? "#888" : "#3a3a3a", fontFamily: "DM Mono", cursor: "pointer",
-                                    borderBottom: "1px dashed #333", paddingBottom: 1 }}
+                                  style={{ display: "inline-flex", alignItems: "center", gap: 4,
+                                    fontSize: 11, color: task.tiempo_real > 0 ? "#888" : "#555",
+                                    fontFamily: "DM Mono", cursor: "pointer",
+                                    background: "#1a1a1a", border: "1px solid #2a2a2a",
+                                    padding: "2px 8px", borderRadius: 6 }}
                                   title="Click para editar tiempo real"
                                 >
-                                  {task.tiempo_real > 0 ? `Real: ${minsToH(task.tiempo_real)}` : "Real: —"}
+                                  ✎ {task.tiempo_real > 0 ? `Real: ${minsToH(task.tiempo_real)}` : "Log tiempo"}
                                 </span>
                               )}
 
