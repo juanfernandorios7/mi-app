@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Proyecto, Tarea } from "@/lib/types";
-import { fmtCOP, minsToH, getRentabilidad, today, btnStyle, inputStyle, ACCENT_COLORS } from "@/lib/utils";
+import { fmtCOP, minsToH, getRentabilidad, getDiasActivo, getAlertaDuracion, today, btnStyle, inputStyle, ACCENT_COLORS } from "@/lib/utils";
 import MetricBox from "./MetricBox";
 
 interface ProyectosProps {
@@ -27,6 +27,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
   const [newProject, setNewProject] = useState({
     nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente",
+    fecha_inicio: today(), fecha_fin: "",
   });
   const [newProjectTask, setNewProjectTask] = useState({ titulo: "", tiempo_estimado: 60 });
 
@@ -46,13 +47,15 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
         prioridad: "media",
         color,
         horas_logged: 0,
+        fecha_inicio: newProject.fecha_inicio || null,
+        fecha_fin: newProject.fecha_fin || null,
       })
       .select()
       .single();
 
     if (!error && data) {
       setProyectos(ps => [...ps, data as Proyecto]);
-      setNewProject({ nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente" });
+      setNewProject({ nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente", fecha_inicio: today(), fecha_fin: "" });
       setShowAddProject(false);
       onDataChange();
     }
@@ -159,6 +162,20 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
               <option>USD</option>
             </select>
           </div>
+          {newProject.tipo_cobro === "unico" && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+              <div>
+                <label style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha inicio</label>
+                <input type="date" value={newProject.fecha_inicio}
+                  onChange={e => setNewProject({ ...newProject, fecha_inicio: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha entrega (opcional)</label>
+                <input type="date" value={newProject.fecha_fin}
+                  onChange={e => setNewProject({ ...newProject, fecha_fin: e.target.value })} style={inputStyle} />
+              </div>
+            </div>
+          )}
           <button onClick={addProject} disabled={saving} style={btnStyle("#c8922a")}>
             {saving ? "Guardando..." : "Agregar proyecto"}
           </button>
@@ -188,6 +205,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
           const projTasks = tareas.filter(t => t.proyecto_id === p.id);
           const doneProjTasks = projTasks.filter(t => t.estado === "completada").length;
           const isExpanded = expandedProject === p.id;
+          const diasActivo = getDiasActivo(p);
+          const alerta = getAlertaDuracion(p);
 
           return (
             <div key={p.id} style={{
@@ -212,6 +231,22 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                     </div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {alerta && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 700,
+                        color: alerta.nivel === "danger" ? "#b05a5a" : "#c8922a",
+                        background: alerta.nivel === "danger" ? "#b05a5a18" : "#c8922a18",
+                        border: `1px solid ${alerta.nivel === "danger" ? "#b05a5a44" : "#c8922a44"}`,
+                        padding: "3px 10px", borderRadius: 20,
+                      }}>
+                        ⚠ {alerta.msg}
+                      </span>
+                    )}
+                    {diasActivo !== null && !alerta && (
+                      <span style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono" }}>
+                        {diasActivo}d {p.fecha_fin ? "duración" : "activo"}
+                      </span>
+                    )}
                     <span style={{ fontSize: 11, color: r.color, fontWeight: 700, background: r.color + "20", padding: "3px 10px", borderRadius: 20 }}>
                       {r.label}
                     </span>
@@ -242,7 +277,10 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                   <MetricBox label="Cobrado"     value={fmtCOP(cobrado)}          color={p.color} />
                   <MetricBox label="Horas"       value={p.horas_logged + "h"}     color="#666" />
                   <MetricBox label="Tarifa/h"    value={fmtCOP(ratePerH)}         color={r.color} />
-                  <MetricBox label="Completadas" value={`${doneProjTasks}/${projTasks.length}`} color="#666" />
+                  {diasActivo !== null
+                    ? <MetricBox label={p.fecha_fin ? "Duración" : "Días abierto"} value={diasActivo + "d"} color={alerta ? (alerta.nivel === "danger" ? "#b05a5a" : "#c8922a") : "#666"} />
+                    : <MetricBox label="Completadas" value={`${doneProjTasks}/${projTasks.length}`} color="#666" />
+                  }
                 </div>
 
                 {/* Confirmación eliminar */}
