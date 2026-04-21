@@ -23,6 +23,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   const [trackingStart, setTrackingStart] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const [newProject, setNewProject] = useState({
     nombre: "", cliente_nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico",
@@ -55,6 +56,15 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       onDataChange();
     }
     setSaving(false);
+  };
+
+  const deleteProject = async (id: string) => {
+    setProyectos(ps => ps.filter(p => p.id !== id));
+    setTareas(ts => ts.filter(t => t.proyecto_id !== id));
+    setConfirmDelete(null);
+    setExpandedProject(null);
+    await supabase.from("proyectos").delete().eq("id", id);
+    onDataChange();
   };
 
   const addProjectTask = async (proyectoId: string) => {
@@ -183,6 +193,18 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                       {r.label}
                     </span>
                     <span style={{ fontFamily: "DM Mono", fontSize: 13, color: p.color }}>{fmtCOP(ratePerH)}/h</span>
+                    {/* Botón eliminar */}
+                    <button
+                      onClick={e => { e.stopPropagation(); setConfirmDelete(confirmDelete === p.id ? null : p.id); }}
+                      style={{
+                        background: "transparent", border: "1px solid #2a2a2a",
+                        color: "#555", width: 28, height: 28, borderRadius: 8,
+                        fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                      title="Eliminar proyecto"
+                    >
+                      ×
+                    </button>
                     <span style={{
                       fontSize: 16, color: "#444",
                       transition: "transform 0.2s",
@@ -199,6 +221,27 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                   <MetricBox label="Tarifa/h"    value={fmtCOP(ratePerH)}         color={r.color} />
                   <MetricBox label="Completadas" value={`${doneProjTasks}/${projTasks.length}`} color="#666" />
                 </div>
+
+                {/* Confirmación eliminar */}
+                {confirmDelete === p.id && (
+                  <div onClick={e => e.stopPropagation()} style={{
+                    marginTop: 14, background: "#b05a5a18", border: "1px solid #b05a5a44",
+                    borderRadius: 10, padding: "12px 16px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                  }}>
+                    <span style={{ fontSize: 13, color: "#b05a5a" }}>¿Eliminar "{p.nombre}" y todas sus tareas?</span>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => setConfirmDelete(null)} style={{
+                        background: "transparent", border: "1px solid #333", color: "#666",
+                        padding: "5px 12px", borderRadius: 7, fontSize: 12, fontFamily: "Syne", fontWeight: 600,
+                      }}>Cancelar</button>
+                      <button onClick={() => deleteProject(p.id)} style={{
+                        background: "#b05a5a22", border: "1px solid #b05a5a", color: "#b05a5a",
+                        padding: "5px 12px", borderRadius: 7, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
+                      }}>Eliminar</button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Barra de carga */}
                 <div style={{ marginTop: 14 }}>
