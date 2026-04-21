@@ -576,30 +576,40 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                               <span style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
 
                               {editingTime === task.id ? (
-                                <div style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={e => e.stopPropagation()}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 4, background: "#1a1a1a", border: "1px solid #3a3a3a", borderRadius: 8, padding: "2px 8px" }}>
-                                    <input
-                                      type="number" min={0} max={23} value={editTimeH}
-                                      onChange={e => setEditTimeH(Math.max(0, Number(e.target.value)))}
-                                      style={{ width: 32, background: "transparent", border: "none", color: "#e8e0d0", fontSize: 12, fontFamily: "DM Mono", outline: "none", textAlign: "center" }}
-                                    />
-                                    <span style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono" }}>h</span>
-                                    <input
-                                      type="number" min={0} max={59} value={editTimeM}
-                                      onChange={e => setEditTimeM(Math.max(0, Math.min(59, Number(e.target.value))))}
-                                      onKeyDown={e => e.key === "Enter" && saveEditTime(task, p)}
-                                      style={{ width: 32, background: "transparent", border: "none", color: "#e8e0d0", fontSize: 12, fontFamily: "DM Mono", outline: "none", textAlign: "center" }}
-                                      autoFocus
-                                    />
-                                    <span style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono" }}>m</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={e => e.stopPropagation()}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                                      <input
+                                        type="number" min={0} max={23} value={editTimeH}
+                                        onChange={e => setEditTimeH(Math.max(0, Number(e.target.value)))}
+                                        style={{ width: 48, background: "#1a1a1a", border: "1px solid #3a3a3a", borderRadius: 7,
+                                          color: "#e8e0d0", fontSize: 14, fontFamily: "DM Mono", outline: "none",
+                                          textAlign: "center", padding: "4px 0" }}
+                                        autoFocus
+                                      />
+                                      <span style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono" }}>horas</span>
+                                    </div>
+                                    <span style={{ color: "#444", fontSize: 16, marginBottom: 14 }}>:</span>
+                                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                                      <input
+                                        type="number" min={0} max={59} value={editTimeM}
+                                        onChange={e => setEditTimeM(Math.max(0, Math.min(59, Number(e.target.value))))}
+                                        onKeyDown={e => e.key === "Enter" && saveEditTime(task, p)}
+                                        style={{ width: 48, background: "#1a1a1a", border: "1px solid #3a3a3a", borderRadius: 7,
+                                          color: "#e8e0d0", fontSize: 14, fontFamily: "DM Mono", outline: "none",
+                                          textAlign: "center", padding: "4px 0" }}
+                                      />
+                                      <span style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono" }}>min</span>
+                                    </div>
                                   </div>
                                   <button onClick={() => saveEditTime(task, p)} style={{
                                     background: p.color + "22", border: "1px solid " + p.color + "66",
-                                    color: p.color, fontSize: 10, fontFamily: "Syne", fontWeight: 700,
-                                    padding: "2px 8px", borderRadius: 6,
-                                  }}>✓</button>
+                                    color: p.color, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
+                                    padding: "4px 10px", borderRadius: 7,
+                                  }}>Guardar</button>
                                   <button onClick={() => setEditingTime(null)} style={{
-                                    background: "transparent", border: "none", color: "#555", fontSize: 11, padding: "2px 4px",
+                                    background: "transparent", border: "1px solid #2a2a2a", color: "#555",
+                                    fontSize: 11, padding: "4px 8px", borderRadius: 7,
                                   }}>✕</button>
                                 </div>
                               ) : (
