@@ -44,6 +44,14 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
   const [movingTask, setMovingTask] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Edición inline de tarjeta
+  const [editingTask, setEditingTask] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    titulo: string; proyecto_id: string; prioridad: string;
+    fecha: string; tiempo_estimado_h: number; tiempo_estimado_m: number;
+    tiempo_real_h: number; tiempo_real_m: number;
+  } | null>(null);
+
   // Timer
   useEffect(() => {
     if (!trackingId || !trackingStart) return;
@@ -103,6 +111,44 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
       setTrackingId(tarea.id); setTrackingStart(Date.now()); setElapsed(0);
     }
   }, [trackingId, elapsed, supabase, proyectos, onTareasChange]);
+
+  const openEditTask = (task: Tarea) => {
+    setEditingTask(task.id);
+    setMovingTask(null);
+    setEditForm({
+      titulo: task.titulo,
+      proyecto_id: task.proyecto_id || "",
+      prioridad: task.prioridad,
+      fecha: task.fecha || today(),
+      tiempo_estimado_h: Math.floor(task.tiempo_estimado / 60),
+      tiempo_estimado_m: task.tiempo_estimado % 60,
+      tiempo_real_h: Math.floor(task.tiempo_real / 60),
+      tiempo_real_m: task.tiempo_real % 60,
+    });
+  };
+
+  const saveEditTask = async (task: Tarea) => {
+    if (!editForm || !editForm.titulo) return;
+    setSaving(true);
+    const tiempo_estimado = editForm.tiempo_estimado_h * 60 + editForm.tiempo_estimado_m;
+    const tiempo_real = editForm.tiempo_real_h * 60 + editForm.tiempo_real_m;
+    const updates = {
+      titulo: editForm.titulo,
+      proyecto_id: editForm.proyecto_id || null,
+      prioridad: editForm.prioridad,
+      fecha: editForm.fecha,
+      tiempo_estimado,
+      tiempo_real,
+    };
+    const { error } = await supabase.from("tareas").update(updates).eq("id", task.id);
+    if (!error) {
+      setTareas(ts => ts.map(t => t.id === task.id ? { ...t, ...updates } as Tarea : t));
+      setEditingTask(null);
+      setEditForm(null);
+      onTareasChange();
+    }
+    setSaving(false);
+  };
 
   const addTarea = async () => {
     if (!newTarea.titulo) return;
@@ -252,83 +298,183 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                   const isMoving = movingTask === task.id;
                   const accentColor = proj?.color || "#555";
 
+                  const isEditing = editingTask === task.id;
+
                   return (
                     <div key={task.id} style={{
                       background: "#111",
-                      border: "1px solid " + (isTracking ? accentColor + "66" : "#1e1e1e"),
+                      border: "1px solid " + (isTracking ? accentColor + "66" : isEditing ? "#3a3a3a" : "#1e1e1e"),
                       borderRadius: 14, padding: "14px 16px",
                       transition: "border-color 0.2s",
                     }}>
                       {/* Barra de color del proyecto */}
                       {proj && <div style={{ height: 2, background: proj.color, borderRadius: 2, marginBottom: 10, opacity: 0.6 }} />}
 
-                      {/* Título */}
-                      <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#555" : "#ddd",
-                        textDecoration: key === "completada" ? "line-through" : "none", marginBottom: 8, lineHeight: 1.4 }}>
-                        {task.titulo}
-                      </p>
-
-                      {/* Meta */}
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-                        {proj && <span style={{ fontSize: 10, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
-                        <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
-                        {task.tiempo_real > 0 && <span style={{ fontSize: 10, color: "#666", fontFamily: "DM Mono" }}>Real: {minsToH(task.tiempo_real)}</span>}
-                        {task.fecha && task.fecha !== today() && (
-                          <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono" }}>{task.fecha}</span>
-                        )}
-                        {task.fecha === today() && <span style={{ fontSize: 10, color: accentColor, fontFamily: "DM Mono" }}>· hoy</span>}
-                      </div>
-
-                      {/* Acciones */}
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        {/* Timer */}
-                        {key !== "completada" && (
-                          <button onClick={() => startTimer(task)} style={{
-                            background: isTracking ? accentColor + "22" : "#1a1a1a",
-                            border: "1px solid " + (isTracking ? accentColor : "#2a2a2a"),
-                            color: isTracking ? accentColor : "#666",
-                            padding: "4px 10px", borderRadius: 7,
-                            fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
-                          }}>
-                            {isTracking
-                              ? `⏹ ${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`
-                              : "▶"}
-                          </button>
-                        )}
-
-                        {/* Mover a... */}
-                        <div style={{ position: "relative" }}>
-                          <button
-                            onClick={() => setMovingTask(isMoving ? null : task.id)}
-                            style={{
-                              background: "#1a1a1a", border: "1px solid #2a2a2a",
-                              color: "#666", padding: "4px 10px", borderRadius: 7,
-                              fontSize: 11, fontFamily: "Syne", fontWeight: 700,
-                            }}
-                          >
-                            Mover a ▾
-                          </button>
-
-                          {isMoving && (
-                            <div style={{
-                              position: "absolute", bottom: "calc(100% + 4px)", left: 0,
-                              background: "#141414", border: "1px solid #2a2a2a", borderRadius: 10,
-                              padding: 6, zIndex: 50, minWidth: 160, boxShadow: "0 8px 24px #00000088",
-                            }}>
-                              {ESTADOS.filter(e => e.key !== key).map(e => (
-                                <button key={e.key} onClick={() => moveTask(task, e.key)}
-                                  style={{ width: "100%", textAlign: "left", padding: "7px 10px", borderRadius: 7,
-                                    border: "none", background: "transparent", color: e.color,
-                                    fontSize: 12, fontFamily: "Syne", fontWeight: 600, cursor: "pointer",
-                                    display: "flex", alignItems: "center", gap: 8 }}>
-                                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: e.color }} />
-                                  {e.label}
-                                </button>
-                              ))}
+                      {isEditing && editForm ? (
+                        /* ── Modo edición ── */
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          <input
+                            value={editForm.titulo}
+                            onChange={e => setEditForm({ ...editForm, titulo: e.target.value })}
+                            autoFocus
+                            style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
+                              padding: "8px 10px", color: "#fff", fontSize: 13, fontFamily: "Syne",
+                              outline: "none", width: "100%" }}
+                          />
+                          <select value={editForm.proyecto_id}
+                            onChange={e => setEditForm({ ...editForm, proyecto_id: e.target.value })}
+                            style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
+                              padding: "7px 10px", color: "#ddd", fontSize: 12, fontFamily: "Syne", outline: "none" }}>
+                            <option value="">Sin proyecto</option>
+                            {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                          </select>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <select value={editForm.prioridad}
+                              onChange={e => setEditForm({ ...editForm, prioridad: e.target.value })}
+                              style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
+                                padding: "7px 10px", color: "#ddd", fontSize: 12, fontFamily: "Syne", outline: "none" }}>
+                              <option value="alta">Alta</option>
+                              <option value="media">Media</option>
+                              <option value="baja">Baja</option>
+                            </select>
+                            <input type="date" value={editForm.fecha}
+                              onChange={e => setEditForm({ ...editForm, fecha: e.target.value })}
+                              style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
+                                padding: "7px 10px", color: "#ddd", fontSize: 12, outline: "none", colorScheme: "dark" }} />
+                          </div>
+                          {/* Tiempos */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                            <div>
+                              <p style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono", marginBottom: 4 }}>Estimado</p>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                                  <input type="number" min={0} value={editForm.tiempo_estimado_h}
+                                    onChange={e => setEditForm({ ...editForm, tiempo_estimado_h: Math.max(0, Number(e.target.value)) })}
+                                    style={{ width: 44, background: "#2a2a2a", border: "1px solid #444", borderRadius: 6,
+                                      color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
+                                  <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>h</span>
+                                </div>
+                                <span style={{ color: "#444", marginBottom: 12 }}>:</span>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                                  <input type="number" min={0} max={59} value={editForm.tiempo_estimado_m}
+                                    onChange={e => setEditForm({ ...editForm, tiempo_estimado_m: Math.max(0, Math.min(59, Number(e.target.value))) })}
+                                    style={{ width: 44, background: "#2a2a2a", border: "1px solid #444", borderRadius: 6,
+                                      color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
+                                  <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>min</span>
+                                </div>
+                              </div>
                             </div>
-                          )}
+                            <div>
+                              <p style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono", marginBottom: 4 }}>Real</p>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                                  <input type="number" min={0} value={editForm.tiempo_real_h}
+                                    onChange={e => setEditForm({ ...editForm, tiempo_real_h: Math.max(0, Number(e.target.value)) })}
+                                    style={{ width: 44, background: "#2a2a2a", border: "1px solid #444", borderRadius: 6,
+                                      color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
+                                  <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>h</span>
+                                </div>
+                                <span style={{ color: "#444", marginBottom: 12 }}>:</span>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                                  <input type="number" min={0} max={59} value={editForm.tiempo_real_m}
+                                    onChange={e => setEditForm({ ...editForm, tiempo_real_m: Math.max(0, Math.min(59, Number(e.target.value))) })}
+                                    style={{ width: 44, background: "#2a2a2a", border: "1px solid #444", borderRadius: 6,
+                                      color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
+                                  <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>min</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Botones guardar/cancelar */}
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            <button onClick={() => saveEditTask(task)} disabled={saving} style={{
+                              background: accentColor + "22", border: "1px solid " + accentColor + "66",
+                              color: accentColor, padding: "6px 14px", borderRadius: 8,
+                              fontSize: 12, fontFamily: "Syne", fontWeight: 700, flex: 1,
+                            }}>
+                              {saving ? "Guardando..." : "Guardar"}
+                            </button>
+                            <button onClick={() => { setEditingTask(null); setEditForm(null); }} style={{
+                              background: "transparent", border: "1px solid #2a2a2a",
+                              color: "#555", padding: "6px 12px", borderRadius: 8,
+                              fontSize: 12, fontFamily: "Syne", fontWeight: 600,
+                            }}>
+                              Cancelar
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        /* ── Modo vista ── */
+                        <>
+                          {/* Título + botón editar */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 8 }}>
+                            <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#555" : "#ddd",
+                              textDecoration: key === "completada" ? "line-through" : "none", lineHeight: 1.4, flex: 1 }}>
+                              {task.titulo}
+                            </p>
+                            <button onClick={() => openEditTask(task)} style={{
+                              background: "transparent", border: "none", color: "#444",
+                              fontSize: 13, cursor: "pointer", padding: "0 2px", flexShrink: 0,
+                            }} title="Editar">✎</button>
+                          </div>
+
+                          {/* Meta */}
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                            {proj && <span style={{ fontSize: 10, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
+                            <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
+                            {task.tiempo_real > 0 && <span style={{ fontSize: 10, color: "#666", fontFamily: "DM Mono" }}>Real: {minsToH(task.tiempo_real)}</span>}
+                            {task.fecha && task.fecha !== today() && (
+                              <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono" }}>{task.fecha}</span>
+                            )}
+                            {task.fecha === today() && <span style={{ fontSize: 10, color: accentColor, fontFamily: "DM Mono" }}>· hoy</span>}
+                          </div>
+
+                          {/* Acciones */}
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {key !== "completada" && (
+                              <button onClick={() => startTimer(task)} style={{
+                                background: isTracking ? accentColor + "22" : "#1a1a1a",
+                                border: "1px solid " + (isTracking ? accentColor : "#2a2a2a"),
+                                color: isTracking ? accentColor : "#666",
+                                padding: "4px 10px", borderRadius: 7,
+                                fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
+                              }}>
+                                {isTracking
+                                  ? `⏹ ${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`
+                                  : "▶"}
+                              </button>
+                            )}
+
+                            <div style={{ position: "relative" }}>
+                              <button onClick={() => setMovingTask(isMoving ? null : task.id)} style={{
+                                background: "#1a1a1a", border: "1px solid #2a2a2a",
+                                color: "#666", padding: "4px 10px", borderRadius: 7,
+                                fontSize: 11, fontFamily: "Syne", fontWeight: 700,
+                              }}>
+                                Mover a ▾
+                              </button>
+                              {isMoving && (
+                                <div style={{
+                                  position: "absolute", bottom: "calc(100% + 4px)", left: 0,
+                                  background: "#141414", border: "1px solid #2a2a2a", borderRadius: 10,
+                                  padding: 6, zIndex: 50, minWidth: 160, boxShadow: "0 8px 24px #00000088",
+                                }}>
+                                  {ESTADOS.filter(e => e.key !== key).map(e => (
+                                    <button key={e.key} onClick={() => moveTask(task, e.key)}
+                                      style={{ width: "100%", textAlign: "left", padding: "7px 10px", borderRadius: 7,
+                                        border: "none", background: "transparent", color: e.color,
+                                        fontSize: 12, fontFamily: "Syne", fontWeight: 600, cursor: "pointer",
+                                        display: "flex", alignItems: "center", gap: 8 }}>
+                                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: e.color }} />
+                                      {e.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   );
                 })}
