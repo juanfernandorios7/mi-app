@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tarea, Proyecto } from "@/lib/types";
-import { today, minsToH, btnStyle, inputStyle } from "@/lib/utils";
+import { today, minsToH } from "@/lib/utils";
 
 interface TareasProps {
   initialTareas: Tarea[];
@@ -11,11 +11,17 @@ interface TareasProps {
   onTareasChange: () => void;
 }
 
+const EMPTY_TAREA = {
+  titulo: "", descripcion: "", proyecto_id: "",
+  estado: "pendiente", prioridad: "media",
+  fecha: today(), tiempo_estimado: 1, tiempo_real: 0,
+};
+
 export default function Tareas({ initialTareas, proyectos, onTareasChange }: TareasProps) {
   const supabase = createClient();
   const [tareas, setTareas] = useState<Tarea[]>(initialTareas);
   const [showAdd, setShowAdd] = useState(false);
-  const [newTarea, setNewTarea] = useState({ titulo: "", proyecto_id: "", tiempo_estimado: 60 });
+  const [newTarea, setNewTarea] = useState({ ...EMPTY_TAREA });
   const [trackingId, setTrackingId] = useState<string | null>(null);
   const [trackingStart, setTrackingStart] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -23,15 +29,21 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
 
   const todayTasks = tareas.filter(t => t.fecha === today());
   const doneTasks = todayTasks.filter(t => t.estado === "completada").length;
+  const inProgressTasks = todayTasks.filter(t => t.estado === "en_progreso").length;
+  const pendingTasks = todayTasks.filter(t => t.estado === "pendiente").length;
 
-  // Timer tick
   useEffect(() => {
     if (!trackingId || !trackingStart) return;
-    const iv = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - trackingStart) / 1000));
-    }, 1000);
+    const iv = setInterval(() => setElapsed(Math.floor((Date.now() - trackingStart) / 1000)), 1000);
     return () => clearInterval(iv);
   }, [trackingId, trackingStart]);
+
+  // Cerrar modal con Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAdd(false); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const toggleDone = useCallback(async (tarea: Tarea) => {
     const newEstado = tarea.estado === "completada" ? "pendiente" : "completada";
@@ -42,13 +54,10 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
 
   const startTimer = useCallback(async (tarea: Tarea) => {
     if (trackingId === tarea.id) {
-      // Stop timer
       const mins = Math.floor(elapsed / 60);
       const newReal = tarea.tiempo_real + mins;
       setTareas(ts => ts.map(t => t.id === tarea.id ? { ...t, tiempo_real: newReal } : t));
       await supabase.from("tareas").update({ tiempo_real: newReal }).eq("id", tarea.id);
-
-      // Update horas_logged on project
       if (tarea.proyecto_id) {
         const proj = proyectos.find(p => p.id === tarea.proyecto_id);
         if (proj) {
@@ -56,14 +65,10 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
           await supabase.from("proyectos").update({ horas_logged: newHours }).eq("id", tarea.proyecto_id);
         }
       }
-      setTrackingId(null);
-      setTrackingStart(null);
-      setElapsed(0);
+      setTrackingId(null); setTrackingStart(null); setElapsed(0);
       onTareasChange();
     } else {
-      setTrackingId(tarea.id);
-      setTrackingStart(Date.now());
-      setElapsed(0);
+      setTrackingId(tarea.id); setTrackingStart(Date.now()); setElapsed(0);
     }
   }, [trackingId, elapsed, supabase, proyectos, onTareasChange]);
 
@@ -74,74 +79,175 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
       .from("tareas")
       .insert({
         titulo: newTarea.titulo,
+        descripcion: newTarea.descripcion || null,
         proyecto_id: newTarea.proyecto_id || null,
-        tiempo_estimado: Number(newTarea.tiempo_estimado) || 60,
-        tiempo_real: 0,
-        estado: "pendiente",
-        prioridad: "media",
-        fecha: today(),
+        estado: newTarea.estado,
+        prioridad: newTarea.prioridad,
+        fecha: newTarea.fecha || today(),
+        tiempo_estimado: Math.round((Number(newTarea.tiempo_estimado) || 1) * 60),
+        tiempo_real: Math.round((Number(newTarea.tiempo_real) || 0) * 60),
       })
-      .select()
-      .single();
+      .select().single();
 
     if (!error && data) {
       setTareas(ts => [...ts, data as Tarea]);
-      setNewTarea({ titulo: "", proyecto_id: "", tiempo_estimado: 60 });
+      setNewTarea({ ...EMPTY_TAREA });
       setShowAdd(false);
       onTareasChange();
     }
     setSaving(false);
   };
 
+  const field: React.CSSProperties = {
+    background: "#111", border: "1px solid #2a2a2a", borderRadius: 12,
+    padding: "14px 16px", color: "#e8e0d0", fontSize: 14,
+    fontFamily: "'Syne', sans-serif", outline: "none", width: "100%",
+  };
+
   return (
     <div className="fade-up">
+      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, marginBottom: 4 }}>Tareas de hoy</h2>
-          <p style={{ fontSize: 12, color: "#555", fontFamily: "DM Mono" }}>{doneTasks} completadas de {todayTasks.length}</p>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, marginBottom: 6 }}>Tareas del día</h2>
+          <p style={{ fontSize: 12, color: "#555", fontFamily: "'DM Mono', monospace" }}>
+            {doneTasks} finalizadas · {inProgressTasks} en progreso · {pendingTasks} pendientes
+          </p>
         </div>
-        <button onClick={() => setShowAdd(!showAdd)} style={btnStyle("#c8922a")}>
-          {showAdd ? "Cancelar" : "+ Nueva tarea"}
+        <button
+          onClick={() => setShowAdd(true)}
+          style={{
+            background: "#c8922a18", border: "1px solid #c8922a",
+            color: "#c8922a", padding: "10px 20px", borderRadius: 12,
+            fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          }}
+        >
+          + Nueva tarea
         </button>
       </div>
 
+      {/* Modal */}
       {showAdd && (
-        <div className="fade-up" style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: 16, padding: 20, marginBottom: 20 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 120px", gap: 12, marginBottom: 12 }}>
-            <input
-              placeholder="Nombre de la tarea"
-              value={newTarea.titulo}
-              onChange={e => setNewTarea({ ...newTarea, titulo: e.target.value })}
-              onKeyDown={e => e.key === "Enter" && addTarea()}
-              style={inputStyle}
-              autoFocus
-            />
-            <select
-              value={newTarea.proyecto_id}
-              onChange={e => setNewTarea({ ...newTarea, proyecto_id: e.target.value })}
-              style={inputStyle}
-            >
-              <option value="">Proyecto...</option>
-              {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-            </select>
-            <input
-              type="number"
-              placeholder="Min est."
-              value={newTarea.tiempo_estimado}
-              onChange={e => setNewTarea({ ...newTarea, tiempo_estimado: Number(e.target.value) })}
-              style={inputStyle}
-            />
+        <div
+          onClick={() => setShowAdd(false)}
+          style={{
+            position: "fixed", inset: 0, background: "#000000aa",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 200, padding: 24,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="fade-up"
+            style={{
+              background: "#111", border: "1px solid #2a2a2a", borderRadius: 20,
+              padding: 36, width: "100%", maxWidth: 560,
+            }}
+          >
+            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, marginBottom: 24, color: "#e8e0d0" }}>
+              Nueva tarea
+            </h3>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <input
+                placeholder="Título *"
+                value={newTarea.titulo}
+                onChange={e => setNewTarea({ ...newTarea, titulo: e.target.value })}
+                style={field}
+                autoFocus
+              />
+
+              <input
+                placeholder="Descripción (opcional)"
+                value={newTarea.descripcion}
+                onChange={e => setNewTarea({ ...newTarea, descripcion: e.target.value })}
+                style={field}
+              />
+
+              <select
+                value={newTarea.proyecto_id}
+                onChange={e => setNewTarea({ ...newTarea, proyecto_id: e.target.value })}
+                style={field}
+              >
+                <option value="">Selecciona proyecto *</option>
+                {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              </select>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                <select value={newTarea.estado} onChange={e => setNewTarea({ ...newTarea, estado: e.target.value })} style={field}>
+                  <option value="pendiente">pendiente</option>
+                  <option value="en_progreso">en progreso</option>
+                  <option value="completada">completada</option>
+                </select>
+                <select value={newTarea.prioridad} onChange={e => setNewTarea({ ...newTarea, prioridad: e.target.value })} style={field}>
+                  <option value="alta">alta</option>
+                  <option value="media">media</option>
+                  <option value="baja">baja</option>
+                </select>
+                <input
+                  type="date"
+                  value={newTarea.fecha}
+                  onChange={e => setNewTarea({ ...newTarea, fecha: e.target.value })}
+                  style={{ ...field, colorScheme: "dark" }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo estimado (h)</label>
+                  <input
+                    type="number" min="0" step="0.5"
+                    value={newTarea.tiempo_estimado}
+                    onChange={e => setNewTarea({ ...newTarea, tiempo_estimado: Number(e.target.value) })}
+                    style={field}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo real (h)</label>
+                  <input
+                    type="number" min="0" step="0.5"
+                    value={newTarea.tiempo_real || ""}
+                    onChange={e => setNewTarea({ ...newTarea, tiempo_real: Number(e.target.value) })}
+                    placeholder=""
+                    style={field}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 28 }}>
+              <button
+                onClick={addTarea}
+                disabled={saving || !newTarea.titulo}
+                style={{
+                  background: saving || !newTarea.titulo ? "#2a2a2a" : "#c8922a",
+                  border: "none", color: saving || !newTarea.titulo ? "#555" : "#0a0a0a",
+                  padding: "12px 24px", borderRadius: 10,
+                  fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+                  cursor: saving || !newTarea.titulo ? "not-allowed" : "pointer",
+                }}
+              >
+                {saving ? "Guardando..." : "Guardar tarea"}
+              </button>
+              <button
+                onClick={() => setShowAdd(false)}
+                style={{
+                  background: "transparent", border: "none",
+                  color: "#555", fontSize: 14, fontFamily: "'Syne', sans-serif",
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
-          <button onClick={addTarea} disabled={saving} style={btnStyle("#c8922a")}>
-            {saving ? "Guardando..." : "Agregar"}
-          </button>
         </div>
       )}
 
+      {/* Lista */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {todayTasks.length === 0 && (
           <div style={{ textAlign: "center", padding: "48px 0", color: "#444" }}>
-            <p style={{ fontFamily: "DM Serif Display", fontSize: 20, marginBottom: 8 }}>Sin tareas hoy</p>
+            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 8 }}>Sin tareas hoy</p>
             <p style={{ fontSize: 13 }}>Agrega tu primera tarea del día</p>
           </div>
         )}
@@ -173,14 +279,14 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                   {task.titulo}
                 </p>
                 <div style={{ display: "flex", gap: 12, marginTop: 4, flexWrap: "wrap" }}>
-                  {proj && <span style={{ fontSize: 11, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
-                  <span style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
-                  {task.tiempo_real > 0 && <span style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono" }}>Real: {minsToH(task.tiempo_real)}</span>}
+                  {proj && <span style={{ fontSize: 11, color: proj.color, fontFamily: "'DM Mono', monospace" }}>◆ {proj.nombre}</span>}
+                  <span style={{ fontSize: 11, color: "#444", fontFamily: "'DM Mono', monospace" }}>Est: {minsToH(task.tiempo_estimado)}</span>
+                  {task.tiempo_real > 0 && <span style={{ fontSize: 11, color: "#666", fontFamily: "'DM Mono', monospace" }}>Real: {minsToH(task.tiempo_real)}</span>}
                 </div>
               </div>
 
               {isTracking && (
-                <div style={{ fontFamily: "DM Mono", fontSize: 14, color: "#c8922a", minWidth: 60 }}>
+                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 14, color: "#c8922a", minWidth: 60 }}>
                   {String(Math.floor(elapsed / 60)).padStart(2, "0")}:{String(elapsed % 60).padStart(2, "0")}
                 </div>
               )}
@@ -191,7 +297,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                   border: "1px solid " + (isTracking ? "#c8922a" : "#2a2a2a"),
                   color: isTracking ? "#c8922a" : "#666",
                   padding: "6px 14px", borderRadius: 8,
-                  fontSize: 12, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
+                  fontSize: 12, fontFamily: "'Syne', sans-serif", fontWeight: 700, whiteSpace: "nowrap",
                 }}>
                   {isTracking ? "⏹ Stop" : "▶ Timer"}
                 </button>
