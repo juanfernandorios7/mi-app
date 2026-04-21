@@ -24,6 +24,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   const [elapsed, setElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [closingProject, setClosingProject] = useState<string | null>(null);
+  const [closingFecha, setClosingFecha] = useState(today());
 
   const [newProject, setNewProject] = useState({
     nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente",
@@ -57,6 +59,20 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       setProyectos(ps => [...ps, data as Proyecto]);
       setNewProject({ nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente", fecha_inicio: today(), fecha_fin: "" });
       setShowAddProject(false);
+      onDataChange();
+    }
+    setSaving(false);
+  };
+
+  const closeProject = async (id: string) => {
+    setSaving(true);
+    const { error } = await supabase
+      .from("proyectos")
+      .update({ fecha_fin: closingFecha, estado: "finalizado" })
+      .eq("id", id);
+    if (!error) {
+      setProyectos(ps => ps.map(p => p.id === id ? { ...p, fecha_fin: closingFecha, estado: "finalizado" } : p));
+      setClosingProject(null);
       onDataChange();
     }
     setSaving(false);
@@ -251,6 +267,20 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                       {r.label}
                     </span>
                     <span style={{ fontFamily: "DM Mono", fontSize: 13, color: p.color }}>{fmtCOP(ratePerH)}/h</span>
+                    {/* Botón cerrar proyecto (solo pago único sin fecha_fin) */}
+                    {p.tipo_cobro === "unico" && !p.fecha_fin && (
+                      <button
+                        onClick={e => { e.stopPropagation(); setClosingProject(closingProject === p.id ? null : p.id); setClosingFecha(today()); }}
+                        style={{
+                          background: "#7c9e6e18", border: "1px solid #7c9e6e44",
+                          color: "#7c9e6e", padding: "4px 10px", borderRadius: 8,
+                          fontSize: 11, fontFamily: "Syne", fontWeight: 700,
+                        }}
+                        title="Cerrar proyecto"
+                      >
+                        Cerrar
+                      </button>
+                    )}
                     {/* Botón eliminar */}
                     <button
                       onClick={e => { e.stopPropagation(); setConfirmDelete(confirmDelete === p.id ? null : p.id); }}
@@ -300,6 +330,38 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                         background: "#b05a5a22", border: "1px solid #b05a5a", color: "#b05a5a",
                         padding: "5px 12px", borderRadius: 7, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
                       }}>Eliminar</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Panel cerrar proyecto */}
+                {closingProject === p.id && (
+                  <div onClick={e => e.stopPropagation()} style={{
+                    marginTop: 14, background: "#7c9e6e12", border: "1px solid #7c9e6e44",
+                    borderRadius: 10, padding: "14px 16px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+                  }}>
+                    <div>
+                      <p style={{ fontSize: 13, color: "#7c9e6e", fontWeight: 700, marginBottom: 4 }}>Cerrar "{p.nombre}"</p>
+                      <p style={{ fontSize: 11, color: "#555" }}>¿Cuál fue la fecha de entrega?</p>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <input
+                        type="date"
+                        value={closingFecha}
+                        onChange={e => setClosingFecha(e.target.value)}
+                        style={{ ...inputStyle, width: "auto", padding: "6px 12px", fontSize: 13 }}
+                      />
+                      <button onClick={() => setClosingProject(null)} style={{
+                        background: "transparent", border: "1px solid #333", color: "#666",
+                        padding: "6px 12px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 600,
+                      }}>Cancelar</button>
+                      <button onClick={() => closeProject(p.id)} disabled={saving} style={{
+                        background: "#7c9e6e22", border: "1px solid #7c9e6e", color: "#7c9e6e",
+                        padding: "6px 14px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
+                      }}>
+                        {saving ? "Guardando..." : "Confirmar cierre"}
+                      </button>
                     </div>
                   </div>
                 )}
