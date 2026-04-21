@@ -582,24 +582,24 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                                       <input
                                         type="number" min={0} max={23} value={editTimeH}
                                         onChange={e => setEditTimeH(Math.max(0, Number(e.target.value)))}
-                                        style={{ width: 48, background: "#1a1a1a", border: "1px solid #3a3a3a", borderRadius: 7,
-                                          color: "#e8e0d0", fontSize: 14, fontFamily: "DM Mono", outline: "none",
-                                          textAlign: "center", padding: "4px 0" }}
+                                        style={{ width: 52, background: "#2a2a2a", border: "1px solid #444", borderRadius: 7,
+                                          color: "#ffffff", fontSize: 16, fontFamily: "DM Mono", outline: "none",
+                                          textAlign: "center", padding: "6px 4px" }}
                                         autoFocus
                                       />
-                                      <span style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono" }}>horas</span>
+                                      <span style={{ fontSize: 10, color: "#666", fontFamily: "DM Mono" }}>horas</span>
                                     </div>
-                                    <span style={{ color: "#444", fontSize: 16, marginBottom: 14 }}>:</span>
+                                    <span style={{ color: "#555", fontSize: 18, marginBottom: 14 }}>:</span>
                                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                       <input
                                         type="number" min={0} max={59} value={editTimeM}
                                         onChange={e => setEditTimeM(Math.max(0, Math.min(59, Number(e.target.value))))}
                                         onKeyDown={e => e.key === "Enter" && saveEditTime(task, p)}
-                                        style={{ width: 48, background: "#1a1a1a", border: "1px solid #3a3a3a", borderRadius: 7,
-                                          color: "#e8e0d0", fontSize: 14, fontFamily: "DM Mono", outline: "none",
-                                          textAlign: "center", padding: "4px 0" }}
+                                        style={{ width: 52, background: "#2a2a2a", border: "1px solid #444", borderRadius: 7,
+                                          color: "#ffffff", fontSize: 16, fontFamily: "DM Mono", outline: "none",
+                                          textAlign: "center", padding: "6px 4px" }}
                                       />
-                                      <span style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono" }}>min</span>
+                                      <span style={{ fontSize: 10, color: "#666", fontFamily: "DM Mono" }}>min</span>
                                     </div>
                                   </div>
                                   <button onClick={() => saveEditTime(task, p)} style={{
