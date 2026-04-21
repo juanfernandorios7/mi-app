@@ -26,6 +26,11 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [closingProject, setClosingProject] = useState<string | null>(null);
   const [closingFecha, setClosingFecha] = useState(today());
+  const [editingProject, setEditingProject] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    nombre: string; tipo: string; tipo_cobro: string;
+    valor_total: string; currency: string; fecha_inicio: string; fecha_fin: string;
+  } | null>(null);
 
   const [newProject, setNewProject] = useState({
     nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente",
@@ -73,6 +78,41 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
     if (!error) {
       setProyectos(ps => ps.map(p => p.id === id ? { ...p, fecha_fin: closingFecha, estado: "finalizado" } : p));
       setClosingProject(null);
+      onDataChange();
+    }
+    setSaving(false);
+  };
+
+  const startEdit = (p: Proyecto) => {
+    setEditingProject(p.id);
+    setEditForm({
+      nombre: p.nombre,
+      tipo: p.tipo,
+      tipo_cobro: p.tipo_cobro,
+      valor_total: String(p.valor_total || p.valor_mensual || ""),
+      currency: p.currency,
+      fecha_inicio: p.fecha_inicio || "",
+      fecha_fin: p.fecha_fin || "",
+    });
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editForm) return;
+    setSaving(true);
+    const updates = {
+      nombre: editForm.nombre,
+      tipo: editForm.tipo,
+      tipo_cobro: editForm.tipo_cobro,
+      valor_total: Number(editForm.valor_total) || 0,
+      currency: editForm.currency,
+      fecha_inicio: editForm.fecha_inicio || null,
+      fecha_fin: editForm.fecha_fin || null,
+    };
+    const { error } = await supabase.from("proyectos").update(updates).eq("id", id);
+    if (!error) {
+      setProyectos(ps => ps.map(p => p.id === id ? { ...p, ...updates } as Proyecto : p));
+      setEditingProject(null);
+      setEditForm(null);
       onDataChange();
     }
     setSaving(false);
@@ -267,6 +307,17 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                       {r.label}
                     </span>
                     <span style={{ fontFamily: "DM Mono", fontSize: 13, color: p.color }}>{fmtCOP(ratePerH)}/h</span>
+                    {/* Botón editar */}
+                    <button
+                      onClick={e => { e.stopPropagation(); editingProject === p.id ? setEditingProject(null) : startEdit(p); }}
+                      style={{
+                        background: "transparent", border: "1px solid #2a2a2a",
+                        color: "#555", padding: "4px 10px", borderRadius: 8,
+                        fontSize: 11, fontFamily: "Syne", fontWeight: 700,
+                      }}
+                    >
+                      Editar
+                    </button>
                     {/* Botón cerrar proyecto (solo pago único sin fecha_fin) */}
                     {p.tipo_cobro === "unico" && !p.fecha_fin && (
                       <button
@@ -330,6 +381,62 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                         background: "#b05a5a22", border: "1px solid #b05a5a", color: "#b05a5a",
                         padding: "5px 12px", borderRadius: 7, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
                       }}>Eliminar</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Panel editar proyecto */}
+                {editingProject === p.id && editForm && (
+                  <div onClick={e => e.stopPropagation()} style={{
+                    marginTop: 14, background: "#0f0f0f", border: "1px solid #2a2a2a",
+                    borderRadius: 12, padding: "16px 18px",
+                  }}>
+                    <p style={{ fontSize: 11, color: "#555", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "DM Mono", marginBottom: 14 }}>Editar proyecto</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                      <input value={editForm.nombre} onChange={e => setEditForm({ ...editForm, nombre: e.target.value })}
+                        placeholder="Nombre" style={inputStyle} />
+                      <select value={editForm.tipo} onChange={e => setEditForm({ ...editForm, tipo: e.target.value })} style={inputStyle}>
+                        <option value="cliente">Cliente</option>
+                        <option value="propio">Propio</option>
+                        <option value="proposito">Propósito</option>
+                      </select>
+                      <input value={editForm.valor_total} onChange={e => setEditForm({ ...editForm, valor_total: e.target.value })}
+                        placeholder="Valor cobrado" type="number" style={inputStyle} />
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px", gap: 10, marginBottom: 10 }}>
+                      <select value={editForm.tipo_cobro} onChange={e => setEditForm({ ...editForm, tipo_cobro: e.target.value })} style={inputStyle}>
+                        <option value="unico">Único</option>
+                        <option value="recurrente">Recurrente</option>
+                      </select>
+                      <select value={editForm.currency} onChange={e => setEditForm({ ...editForm, currency: e.target.value })} style={inputStyle}>
+                        <option>COP</option>
+                        <option>USD</option>
+                      </select>
+                      <div />
+                    </div>
+                    {editForm.tipo_cobro === "unico" && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                        <div>
+                          <label style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha inicio</label>
+                          <input type="date" value={editForm.fecha_inicio} onChange={e => setEditForm({ ...editForm, fecha_inicio: e.target.value })} style={inputStyle} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha entrega</label>
+                          <input type="date" value={editForm.fecha_fin} onChange={e => setEditForm({ ...editForm, fecha_fin: e.target.value })} style={inputStyle} />
+                        </div>
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button onClick={() => setEditingProject(null)} style={{
+                        background: "transparent", border: "1px solid #333", color: "#666",
+                        padding: "6px 14px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 600,
+                      }}>Cancelar</button>
+                      <button onClick={() => saveEdit(p.id)} disabled={saving} style={{
+                        background: "#c8922a22", border: "1px solid #c8922a", color: "#c8922a",
+                        padding: "6px 16px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
+                      }}>
+                        {saving ? "Guardando..." : "Guardar cambios"}
+                      </button>
                     </div>
                   </div>
                 )}
