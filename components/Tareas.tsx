@@ -169,9 +169,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
           style={{
             position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
             background: "#000000bb",
-            display: "flex", alignItems: "flex-start", justifyContent: "center",
-            zIndex: 200, padding: "80px 24px 24px",
-            overflowY: "auto",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 200, padding: 24,
           }}
         >
           <div
@@ -179,15 +178,16 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
             className="fade-up"
             style={{
               background: "#111", border: "1px solid #2a2a2a", borderRadius: 20,
-              padding: 36, width: "100%", maxWidth: 560,
+              padding: "28px 32px", width: "100%", maxWidth: 540,
+              maxHeight: "calc(100vh - 48px)", overflowY: "auto",
             }}
           >
-            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, marginBottom: 20, color: "#e8e0d0" }}>
+            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 16, color: "#e8e0d0" }}>
               Nueva tarea
             </h3>
 
             {/* Pestañas */}
-            <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#0f0f0f", borderRadius: 10, padding: 4 }}>
+            <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#0f0f0f", borderRadius: 10, padding: 4 }}>
               {(["una", "masiva"] as const).map(tab => (
                 <button
                   key={tab}
@@ -250,7 +250,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                     </div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 28 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 20 }}>
                   <button onClick={addTarea} disabled={saving || !newTarea.titulo} style={{
                     background: saving || !newTarea.titulo ? "#2a2a2a" : "#c8922a",
                     border: "none", color: saving || !newTarea.titulo ? "#555" : "#0a0a0a",
@@ -294,7 +294,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                     </div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 28 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 20 }}>
                   <button onClick={addBulkTareas} disabled={saving || bulkLines === 0} style={{
                     background: saving || bulkLines === 0 ? "#2a2a2a" : "#c8922a",
                     border: "none", color: saving || bulkLines === 0 ? "#555" : "#0a0a0a",
