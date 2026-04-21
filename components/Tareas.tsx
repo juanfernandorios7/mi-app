@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tarea, Proyecto } from "@/lib/types";
 import { today, minsToH } from "@/lib/utils";
@@ -17,6 +17,12 @@ const EMPTY_TAREA = {
   fecha: today(), tiempo_estimado: 1, tiempo_real: 0,
 };
 
+const ESTADOS = [
+  { key: "pendiente",   label: "Pendientes",   color: "#555"    },
+  { key: "en_progreso", label: "En Progreso",   color: "#c8922a" },
+  { key: "completada",  label: "Finalizadas",   color: "#7c9e6e" },
+] as const;
+
 export default function Tareas({ initialTareas, proyectos, onTareasChange }: TareasProps) {
   const supabase = createClient();
   const [tareas, setTareas] = useState<Tarea[]>(initialTareas);
@@ -32,30 +38,51 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
   const [bulkFecha, setBulkFecha] = useState(today());
   const [bulkTiempo, setBulkTiempo] = useState(1);
 
-  const todayTasks = tareas.filter(t => t.fecha === today());
-  const doneTasks = todayTasks.filter(t => t.estado === "completada").length;
-  const inProgressTasks = todayTasks.filter(t => t.estado === "en_progreso").length;
-  const pendingTasks = todayTasks.filter(t => t.estado === "pendiente").length;
+  // Kanban states
+  const [selectedProyecto, setSelectedProyecto] = useState<string>("todos");
+  const [showProyectoMenu, setShowProyectoMenu] = useState(false);
+  const [movingTask, setMovingTask] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
+  // Timer
   useEffect(() => {
     if (!trackingId || !trackingStart) return;
     const iv = setInterval(() => setElapsed(Math.floor((Date.now() - trackingStart) / 1000)), 1000);
     return () => clearInterval(iv);
   }, [trackingId, trackingStart]);
 
-  // Cerrar modal con Escape
+  // Escape para cerrar modal
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAdd(false); };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setShowAdd(false); setMovingTask(null); } };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const toggleDone = useCallback(async (tarea: Tarea) => {
-    const newEstado = tarea.estado === "completada" ? "pendiente" : "completada";
-    setTareas(ts => ts.map(t => t.id === tarea.id ? { ...t, estado: newEstado } : t));
+  // Cerrar menú proyecto al click fuera
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowProyectoMenu(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Filtrar tareas por proyecto
+  const filtered = selectedProyecto === "todos"
+    ? tareas
+    : tareas.filter(t => t.proyecto_id === selectedProyecto);
+
+  const byEstado = (estado: string) => filtered.filter(t => t.estado === estado);
+
+  const selectedProyectoObj = proyectos.find(p => p.id === selectedProyecto);
+
+  // Mover tarea de estado
+  const moveTask = async (tarea: Tarea, newEstado: string) => {
+    setTareas(ts => ts.map(t => t.id === tarea.id ? { ...t, estado: newEstado as Tarea["estado"] } : t));
     await supabase.from("tareas").update({ estado: newEstado }).eq("id", tarea.id);
+    setMovingTask(null);
     onTareasChange();
-  }, [supabase, onTareasChange]);
+  };
 
   const startTimer = useCallback(async (tarea: Tarea) => {
     if (trackingId === tarea.id) {
@@ -93,7 +120,6 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
         tiempo_real: Math.round((Number(newTarea.tiempo_real) || 0) * 60),
       })
       .select().single();
-
     if (!error && data) {
       setTareas(ts => [...ts, data as Tarea]);
       setNewTarea({ ...EMPTY_TAREA });
@@ -104,10 +130,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
   };
 
   const addBulkTareas = async () => {
-    const lineas = bulkText
-      .split("\n")
-      .map(l => l.trim())
-      .filter(l => l.length > 0);
+    const lineas = bulkText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
     if (lineas.length === 0) return;
     setSaving(true);
     const rows = lineas.map(titulo => ({
@@ -122,10 +145,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
     const { data, error } = await supabase.from("tareas").insert(rows).select();
     if (!error && data) {
       setTareas(ts => [...ts, ...(data as Tarea[])]);
-      setBulkText("");
-      setBulkProyecto("");
-      setBulkFecha(today());
-      setBulkTiempo(1);
+      setBulkText(""); setBulkProyecto(""); setBulkFecha(today()); setBulkTiempo(1);
       setShowAdd(false);
       onTareasChange();
     }
@@ -142,113 +162,250 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
 
   return (
     <div className="fade-up">
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, marginBottom: 6 }}>Tareas del día</h2>
-          <p style={{ fontSize: 12, color: "#555", fontFamily: "'DM Mono', monospace" }}>
-            {doneTasks} finalizadas · {inProgressTasks} en progreso · {pendingTasks} pendientes
-          </p>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28 }}>Tareas</h2>
+
+          {/* Selector de proyecto */}
+          <div ref={menuRef} style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowProyectoMenu(v => !v)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                background: "#111", border: "1px solid #2a2a2a", borderRadius: 10,
+                padding: "7px 14px", cursor: "pointer",
+              }}
+            >
+              {selectedProyectoObj
+                ? <><div style={{ width: 7, height: 7, borderRadius: "50%", background: selectedProyectoObj.color }} /><span style={{ fontSize: 13, color: "#ddd", fontFamily: "Syne", fontWeight: 600 }}>{selectedProyectoObj.nombre}</span></>
+                : <span style={{ fontSize: 13, color: "#888", fontFamily: "Syne", fontWeight: 600 }}>Todos los proyectos</span>
+              }
+              <span style={{ fontSize: 10, color: "#555", marginLeft: 2 }}>▾</span>
+            </button>
+
+            {showProyectoMenu && (
+              <div style={{
+                position: "absolute", top: "calc(100% + 6px)", left: 0,
+                background: "#141414", border: "1px solid #2a2a2a", borderRadius: 12,
+                padding: 6, zIndex: 100, minWidth: 200, boxShadow: "0 8px 32px #00000088",
+              }}>
+                <button onClick={() => { setSelectedProyecto("todos"); setShowProyectoMenu(false); }}
+                  style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
+                    background: selectedProyecto === "todos" ? "#1e1e1e" : "transparent",
+                    border: "none", color: selectedProyecto === "todos" ? "#c8922a" : "#888",
+                    fontSize: 13, fontFamily: "Syne", fontWeight: 600, cursor: "pointer" }}>
+                  ○ Todos los proyectos
+                </button>
+                {proyectos.map(p => (
+                  <button key={p.id} onClick={() => { setSelectedProyecto(p.id); setShowProyectoMenu(false); }}
+                    style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
+                      background: selectedProyecto === p.id ? "#1e1e1e" : "transparent",
+                      border: "none", color: selectedProyecto === p.id ? p.color : "#888",
+                      fontSize: 13, fontFamily: "Syne", fontWeight: 600, cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
+                    {p.nombre}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          style={{
-            background: "#c8922a18", border: "1px solid #c8922a",
-            color: "#c8922a", padding: "10px 20px", borderRadius: 12,
-            fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
-          }}
-        >
+
+        <button onClick={() => setShowAdd(true)} style={{
+          background: "#c8922a18", border: "1px solid #c8922a",
+          color: "#c8922a", padding: "10px 20px", borderRadius: 12,
+          fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+        }}>
           + Nueva tarea
         </button>
       </div>
 
-      {/* Modal */}
+      {/* ── Kanban ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, alignItems: "start" }}>
+        {ESTADOS.map(({ key, label, color }) => {
+          const col = byEstado(key);
+          return (
+            <div key={key}>
+              {/* Columna header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
+                <span style={{ fontSize: 11, color, fontFamily: "DM Mono", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  {label}
+                </span>
+                <span style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono", marginLeft: 2 }}>{col.length}</span>
+              </div>
+
+              {/* Tarjetas */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {col.length === 0 && (
+                  <div style={{ border: "1px dashed #1e1e1e", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
+                    <p style={{ fontSize: 12, color: "#333", fontFamily: "DM Mono" }}>Sin tareas</p>
+                  </div>
+                )}
+
+                {col.map(task => {
+                  const proj = proyectos.find(p => p.id === task.proyecto_id);
+                  const isTracking = trackingId === task.id;
+                  const isMoving = movingTask === task.id;
+                  const accentColor = proj?.color || "#555";
+
+                  return (
+                    <div key={task.id} style={{
+                      background: "#111",
+                      border: "1px solid " + (isTracking ? accentColor + "66" : "#1e1e1e"),
+                      borderRadius: 14, padding: "14px 16px",
+                      transition: "border-color 0.2s",
+                    }}>
+                      {/* Barra de color del proyecto */}
+                      {proj && <div style={{ height: 2, background: proj.color, borderRadius: 2, marginBottom: 10, opacity: 0.6 }} />}
+
+                      {/* Título */}
+                      <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#555" : "#ddd",
+                        textDecoration: key === "completada" ? "line-through" : "none", marginBottom: 8, lineHeight: 1.4 }}>
+                        {task.titulo}
+                      </p>
+
+                      {/* Meta */}
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                        {proj && <span style={{ fontSize: 10, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
+                        <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
+                        {task.tiempo_real > 0 && <span style={{ fontSize: 10, color: "#666", fontFamily: "DM Mono" }}>Real: {minsToH(task.tiempo_real)}</span>}
+                        {task.fecha && task.fecha !== today() && (
+                          <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono" }}>{task.fecha}</span>
+                        )}
+                        {task.fecha === today() && <span style={{ fontSize: 10, color: accentColor, fontFamily: "DM Mono" }}>· hoy</span>}
+                      </div>
+
+                      {/* Acciones */}
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {/* Timer */}
+                        {key !== "completada" && (
+                          <button onClick={() => startTimer(task)} style={{
+                            background: isTracking ? accentColor + "22" : "#1a1a1a",
+                            border: "1px solid " + (isTracking ? accentColor : "#2a2a2a"),
+                            color: isTracking ? accentColor : "#666",
+                            padding: "4px 10px", borderRadius: 7,
+                            fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
+                          }}>
+                            {isTracking
+                              ? `⏹ ${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`
+                              : "▶"}
+                          </button>
+                        )}
+
+                        {/* Mover a... */}
+                        <div style={{ position: "relative" }}>
+                          <button
+                            onClick={() => setMovingTask(isMoving ? null : task.id)}
+                            style={{
+                              background: "#1a1a1a", border: "1px solid #2a2a2a",
+                              color: "#666", padding: "4px 10px", borderRadius: 7,
+                              fontSize: 11, fontFamily: "Syne", fontWeight: 700,
+                            }}
+                          >
+                            Mover a ▾
+                          </button>
+
+                          {isMoving && (
+                            <div style={{
+                              position: "absolute", bottom: "calc(100% + 4px)", left: 0,
+                              background: "#141414", border: "1px solid #2a2a2a", borderRadius: 10,
+                              padding: 6, zIndex: 50, minWidth: 160, boxShadow: "0 8px 24px #00000088",
+                            }}>
+                              {ESTADOS.filter(e => e.key !== key).map(e => (
+                                <button key={e.key} onClick={() => moveTask(task, e.key)}
+                                  style={{ width: "100%", textAlign: "left", padding: "7px 10px", borderRadius: 7,
+                                    border: "none", background: "transparent", color: e.color,
+                                    fontSize: 12, fontFamily: "Syne", fontWeight: 600, cursor: "pointer",
+                                    display: "flex", alignItems: "center", gap: 8 }}>
+                                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: e.color }} />
+                                  {e.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Modal nueva tarea ── */}
       {showAdd && (
-        <div
-          onClick={() => setShowAdd(false)}
-          style={{
-            position: "fixed", inset: 0,
-            paddingTop: 58,
-            background: "#000000bb",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            zIndex: 200,
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="fade-up"
-            style={{
-              background: "#111", border: "1px solid #2a2a2a", borderRadius: 20,
-              padding: "28px 32px", width: "100%", maxWidth: 520,
-              maxHeight: "calc(100vh - 80px)", overflowY: "auto",
-              margin: "auto",
-            }}
-          >
+        <div onClick={() => setShowAdd(false)} style={{
+          position: "fixed", inset: 0, paddingTop: 58,
+          background: "#000000bb",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 200,
+        }}>
+          <div onClick={e => e.stopPropagation()} className="fade-up" style={{
+            background: "#111", border: "1px solid #2a2a2a", borderRadius: 20,
+            padding: "28px 32px", width: "100%", maxWidth: 520,
+            maxHeight: "calc(100vh - 80px)", overflowY: "auto", margin: "auto",
+          }}>
             <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 16, color: "#e8e0d0" }}>
               Nueva tarea
             </h3>
 
-            {/* Pestañas */}
+            {/* Tabs */}
             <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#0f0f0f", borderRadius: 10, padding: 4 }}>
               {(["una", "masiva"] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setModalTab(tab)}
-                  style={{
-                    flex: 1, padding: "8px 0", borderRadius: 8, border: "none",
-                    background: modalTab === tab ? "#1e1e1e" : "transparent",
-                    color: modalTab === tab ? "#c8922a" : "#555",
-                    fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
+                <button key={tab} onClick={() => setModalTab(tab)} style={{
+                  flex: 1, padding: "8px 0", borderRadius: 8, border: "none",
+                  background: modalTab === tab ? "#1e1e1e" : "transparent",
+                  color: modalTab === tab ? "#c8922a" : "#555",
+                  fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 700, cursor: "pointer",
+                }}>
                   {tab === "una" ? "Una tarea" : "Carga masiva"}
                 </button>
               ))}
             </div>
 
-            {/* ── UNA TAREA ── */}
+            {/* Una tarea */}
             {modalTab === "una" && (
               <>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <input
-                    placeholder="Título *"
-                    value={newTarea.titulo}
-                    onChange={e => setNewTarea({ ...newTarea, titulo: e.target.value })}
-                    style={field}
-                    autoFocus
-                  />
-                  <input
-                    placeholder="Descripción (opcional)"
-                    value={newTarea.descripcion}
-                    onChange={e => setNewTarea({ ...newTarea, descripcion: e.target.value })}
-                    style={field}
-                  />
+                  <input placeholder="Título *" value={newTarea.titulo}
+                    onChange={e => setNewTarea({ ...newTarea, titulo: e.target.value })} style={field} autoFocus />
+                  <input placeholder="Descripción (opcional)" value={newTarea.descripcion}
+                    onChange={e => setNewTarea({ ...newTarea, descripcion: e.target.value })} style={field} />
                   <select value={newTarea.proyecto_id} onChange={e => setNewTarea({ ...newTarea, proyecto_id: e.target.value })} style={field}>
                     <option value="">Selecciona proyecto</option>
                     {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </select>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                     <select value={newTarea.estado} onChange={e => setNewTarea({ ...newTarea, estado: e.target.value })} style={field}>
-                      <option value="pendiente">pendiente</option>
-                      <option value="en_progreso">en progreso</option>
-                      <option value="completada">completada</option>
+                      <option value="pendiente">Pendiente</option>
+                      <option value="en_progreso">En progreso</option>
+                      <option value="completada">Completada</option>
                     </select>
                     <select value={newTarea.prioridad} onChange={e => setNewTarea({ ...newTarea, prioridad: e.target.value })} style={field}>
-                      <option value="alta">alta</option>
-                      <option value="media">media</option>
-                      <option value="baja">baja</option>
+                      <option value="alta">Alta</option>
+                      <option value="media">Media</option>
+                      <option value="baja">Baja</option>
                     </select>
-                    <input type="date" value={newTarea.fecha} onChange={e => setNewTarea({ ...newTarea, fecha: e.target.value })} style={{ ...field, colorScheme: "dark" }} />
+                    <input type="date" value={newTarea.fecha}
+                      onChange={e => setNewTarea({ ...newTarea, fecha: e.target.value })}
+                      style={{ ...field, colorScheme: "dark" }} />
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
                       <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo estimado (h)</label>
-                      <input type="number" min="0" step="0.5" value={newTarea.tiempo_estimado} onChange={e => setNewTarea({ ...newTarea, tiempo_estimado: Number(e.target.value) })} style={field} />
+                      <input type="number" min="0" step="0.5" value={newTarea.tiempo_estimado}
+                        onChange={e => setNewTarea({ ...newTarea, tiempo_estimado: Number(e.target.value) })} style={field} />
                     </div>
                     <div>
                       <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo real (h)</label>
-                      <input type="number" min="0" step="0.5" value={newTarea.tiempo_real || ""} onChange={e => setNewTarea({ ...newTarea, tiempo_real: Number(e.target.value) })} style={field} />
+                      <input type="number" min="0" step="0.5" value={newTarea.tiempo_real || ""}
+                        onChange={e => setNewTarea({ ...newTarea, tiempo_real: Number(e.target.value) })} style={field} />
                     </div>
                   </div>
                 </div>
@@ -269,21 +426,16 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
               </>
             )}
 
-            {/* ── CARGA MASIVA ── */}
+            {/* Carga masiva */}
             {modalTab === "masiva" && (
               <>
                 <p style={{ fontSize: 12, color: "#555", marginBottom: 16, fontFamily: "'DM Mono', monospace", lineHeight: 1.6 }}>
-                  Pega o escribe una tarea por línea. Puedes pedirle a Claude que te resuma las tareas de tu reunión en este formato.
+                  Pega o escribe una tarea por línea.
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <textarea
-                    placeholder={"Configurar Meta Ads campaña retargeting\nRevisar copy homepage Shopify\nInforme mensual Google Ads\nAjustar automatizaciones CRM"}
-                    value={bulkText}
-                    onChange={e => setBulkText(e.target.value)}
-                    autoFocus
-                    rows={7}
-                    style={{ ...field, resize: "vertical", lineHeight: 1.7 }}
-                  />
+                  <textarea placeholder={"Configurar Meta Ads\nRevisar copy homepage\nInforme mensual"}
+                    value={bulkText} onChange={e => setBulkText(e.target.value)}
+                    autoFocus rows={7} style={{ ...field, resize: "vertical", lineHeight: 1.7 }} />
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px", gap: 12 }}>
                     <select value={bulkProyecto} onChange={e => setBulkProyecto(e.target.value)} style={field}>
                       <option value="">Proyecto (opcional)</option>
@@ -292,7 +444,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                     <input type="date" value={bulkFecha} onChange={e => setBulkFecha(e.target.value)} style={{ ...field, colorScheme: "dark" }} />
                     <div>
                       <label style={{ fontSize: 10, color: "#555", display: "block", marginBottom: 6 }}>h/tarea</label>
-                      <input type="number" min="0.5" step="0.5" value={bulkTiempo} onChange={e => setBulkTiempo(Number(e.target.value))} style={field} />
+                      <input type="number" min="0.5" step="0.5" value={bulkTiempo}
+                        onChange={e => setBulkTiempo(Number(e.target.value))} style={field} />
                     </div>
                   </div>
                 </div>
@@ -315,70 +468,6 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
           </div>
         </div>
       )}
-
-      {/* Lista */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {todayTasks.length === 0 && (
-          <div style={{ textAlign: "center", padding: "48px 0", color: "#444" }}>
-            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 8 }}>Sin tareas hoy</p>
-            <p style={{ fontSize: 13 }}>Agrega tu primera tarea del día</p>
-          </div>
-        )}
-
-        {todayTasks.map(task => {
-          const proj = proyectos.find(p => p.id === task.proyecto_id);
-          const isTracking = trackingId === task.id;
-          const isDone = task.estado === "completada";
-
-          return (
-            <div key={task.id} style={{
-              background: "#111",
-              border: "1px solid " + (isTracking ? "#c8922a44" : "#1e1e1e"),
-              borderRadius: 14, padding: "16px 20px",
-              display: "flex", alignItems: "center", gap: 16,
-              opacity: isDone ? 0.5 : 1, transition: "all 0.2s",
-            }}>
-              <button onClick={() => toggleDone(task)} style={{
-                width: 20, height: 20, borderRadius: "50%",
-                border: "2px solid " + (isDone ? "#7c9e6e" : "#333"),
-                background: isDone ? "#7c9e6e" : "transparent",
-                flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                {isDone && <span style={{ fontSize: 10, color: "#fff" }}>✓</span>}
-              </button>
-
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: isDone ? "#666" : "#ddd", textDecoration: isDone ? "line-through" : "none" }}>
-                  {task.titulo}
-                </p>
-                <div style={{ display: "flex", gap: 12, marginTop: 4, flexWrap: "wrap" }}>
-                  {proj && <span style={{ fontSize: 11, color: proj.color, fontFamily: "'DM Mono', monospace" }}>◆ {proj.nombre}</span>}
-                  <span style={{ fontSize: 11, color: "#444", fontFamily: "'DM Mono', monospace" }}>Est: {minsToH(task.tiempo_estimado)}</span>
-                  {task.tiempo_real > 0 && <span style={{ fontSize: 11, color: "#666", fontFamily: "'DM Mono', monospace" }}>Real: {minsToH(task.tiempo_real)}</span>}
-                </div>
-              </div>
-
-              {isTracking && (
-                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 14, color: "#c8922a", minWidth: 60 }}>
-                  {String(Math.floor(elapsed / 60)).padStart(2, "0")}:{String(elapsed % 60).padStart(2, "0")}
-                </div>
-              )}
-
-              {!isDone && (
-                <button onClick={() => startTimer(task)} style={{
-                  background: isTracking ? "#c8922a22" : "#1a1a1a",
-                  border: "1px solid " + (isTracking ? "#c8922a" : "#2a2a2a"),
-                  color: isTracking ? "#c8922a" : "#666",
-                  padding: "6px 14px", borderRadius: 8,
-                  fontSize: 12, fontFamily: "'Syne', sans-serif", fontWeight: 700, whiteSpace: "nowrap",
-                }}>
-                  {isTracking ? "⏹ Stop" : "▶ Timer"}
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
