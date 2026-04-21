@@ -27,6 +27,9 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   const [closingProject, setClosingProject] = useState<string | null>(null);
   const [closingFecha, setClosingFecha] = useState(today());
   const [editingProject, setEditingProject] = useState<string | null>(null);
+  const [editingTime, setEditingTime] = useState<string | null>(null); // tarea id
+  const [editTimeH, setEditTimeH] = useState(0);
+  const [editTimeM, setEditTimeM] = useState(0);
   const [editForm, setEditForm] = useState<{
     nombre: string; tipo: string; tipo_cobro: string;
     valor_total: string; currency: string; fecha_inicio: string; fecha_fin: string;
@@ -81,6 +84,27 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       onDataChange();
     }
     setSaving(false);
+  };
+
+  const openEditTime = (task: Tarea) => {
+    setEditingTime(task.id);
+    setEditTimeH(Math.floor(task.tiempo_real / 60));
+    setEditTimeM(task.tiempo_real % 60);
+  };
+
+  const saveEditTime = async (task: Tarea, proj: Proyecto) => {
+    const newMins = editTimeH * 60 + editTimeM;
+    const diff = newMins - task.tiempo_real; // diferencia vs lo que tenía antes
+    setTareas(ts => ts.map(t => t.id === task.id ? { ...t, tiempo_real: newMins } : t));
+    await supabase.from("tareas").update({ tiempo_real: newMins }).eq("id", task.id);
+    // actualizar horas_logged del proyecto con la diferencia
+    if (diff !== 0) {
+      const newHours = +(proj.horas_logged + diff / 60).toFixed(2);
+      setProyectos(ps => ps.map(p => p.id === proj.id ? { ...p, horas_logged: Math.max(0, newHours) } : p));
+      await supabase.from("proyectos").update({ horas_logged: Math.max(0, newHours) }).eq("id", proj.id);
+    }
+    setEditingTime(null);
+    onDataChange();
   };
 
   const startEdit = (p: Proyecto) => {
@@ -548,9 +572,47 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                             <p style={{ fontSize: 13, fontWeight: 600, color: isDone ? "#555" : "#ddd", textDecoration: isDone ? "line-through" : "none" }}>
                               {task.titulo}
                             </p>
-                            <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap" }}>
+                            <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap", alignItems: "center" }}>
                               <span style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
-                              {task.tiempo_real > 0 && <span style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono" }}>Real: {minsToH(task.tiempo_real)}</span>}
+
+                              {editingTime === task.id ? (
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }} onClick={e => e.stopPropagation()}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 4, background: "#1a1a1a", border: "1px solid #3a3a3a", borderRadius: 8, padding: "2px 8px" }}>
+                                    <input
+                                      type="number" min={0} max={23} value={editTimeH}
+                                      onChange={e => setEditTimeH(Math.max(0, Number(e.target.value)))}
+                                      style={{ width: 32, background: "transparent", border: "none", color: "#e8e0d0", fontSize: 12, fontFamily: "DM Mono", outline: "none", textAlign: "center" }}
+                                    />
+                                    <span style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono" }}>h</span>
+                                    <input
+                                      type="number" min={0} max={59} value={editTimeM}
+                                      onChange={e => setEditTimeM(Math.max(0, Math.min(59, Number(e.target.value))))}
+                                      onKeyDown={e => e.key === "Enter" && saveEditTime(task, p)}
+                                      style={{ width: 32, background: "transparent", border: "none", color: "#e8e0d0", fontSize: 12, fontFamily: "DM Mono", outline: "none", textAlign: "center" }}
+                                      autoFocus
+                                    />
+                                    <span style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono" }}>m</span>
+                                  </div>
+                                  <button onClick={() => saveEditTime(task, p)} style={{
+                                    background: p.color + "22", border: "1px solid " + p.color + "66",
+                                    color: p.color, fontSize: 10, fontFamily: "Syne", fontWeight: 700,
+                                    padding: "2px 8px", borderRadius: 6,
+                                  }}>✓</button>
+                                  <button onClick={() => setEditingTime(null)} style={{
+                                    background: "transparent", border: "none", color: "#555", fontSize: 11, padding: "2px 4px",
+                                  }}>✕</button>
+                                </div>
+                              ) : (
+                                <span
+                                  onClick={e => { e.stopPropagation(); openEditTime(task); }}
+                                  style={{ fontSize: 11, color: task.tiempo_real > 0 ? "#888" : "#3a3a3a", fontFamily: "DM Mono", cursor: "pointer",
+                                    borderBottom: "1px dashed #333", paddingBottom: 1 }}
+                                  title="Click para editar tiempo real"
+                                >
+                                  {task.tiempo_real > 0 ? `Real: ${minsToH(task.tiempo_real)}` : "Real: —"}
+                                </span>
+                              )}
+
                               {task.fecha === today() && <span style={{ fontSize: 10, color: p.color, fontFamily: "DM Mono" }}>· hoy</span>}
                             </div>
                           </div>
