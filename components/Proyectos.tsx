@@ -23,6 +23,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   const [trackingStart, setTrackingStart] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [showArchivados, setShowArchivados] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [closingProject, setClosingProject] = useState<string | null>(null);
   const [closingFecha, setClosingFecha] = useState(today());
@@ -211,9 +212,21 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, marginBottom: 4 }}>Proyectos</h2>
           <p style={{ fontSize: 12, color: "#555", fontFamily: "DM Mono" }}>Click en un proyecto para ver sus tareas</p>
         </div>
-        <button onClick={() => setShowAddProject(!showAddProject)} style={btnStyle("#c8922a")}>
-          {showAddProject ? "Cancelar" : "+ Nuevo proyecto"}
-        </button>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          {proyectos.filter(p => p.estado === "finalizado").length > 0 && (
+            <button onClick={() => setShowArchivados(v => !v)} style={{
+              background: showArchivados ? "#2a2a2a" : "transparent",
+              border: "1px solid #2a2a2a", color: showArchivados ? "#aaa" : "#555",
+              padding: "8px 16px", borderRadius: 10,
+              fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 600,
+            }}>
+              {showArchivados ? "Ocultar archivados" : `Archivados (${proyectos.filter(p => p.estado === "finalizado").length})`}
+            </button>
+          )}
+          <button onClick={() => setShowAddProject(!showAddProject)} style={btnStyle("#c8922a")}>
+            {showAddProject ? "Cancelar" : "+ Nuevo proyecto"}
+          </button>
+        </div>
       </div>
 
       {showAddProject && (
@@ -262,8 +275,53 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
         </div>
       )}
 
+      {/* Sección archivados */}
+      {showArchivados && (
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#444" }} />
+            <span style={{ fontSize: 11, color: "#555", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
+              Archivados
+            </span>
+            <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {proyectos.filter(p => p.estado === "finalizado").map(p => {
+              const r = getRentabilidad(p);
+              const cobrado = p.valor_total || p.valor_mensual || 0;
+              const ratePerH = Math.round(cobrado / (p.horas_logged || 1));
+              const dias = getDiasActivo(p);
+              return (
+                <div key={p.id} style={{
+                  background: "#0d0d0d", border: "1px solid #1a1a1a",
+                  borderRadius: 16, padding: "18px 24px", opacity: 0.7,
+                  display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#444" }} />
+                    <div>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: "#666" }}>{p.nombre}</p>
+                      <p style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono", marginTop: 2 }}>
+                        {p.fecha_inicio && p.fecha_fin ? `${p.fecha_inicio} → ${p.fecha_fin}` : "Sin fechas"}
+                        {dias !== null ? ` · ${dias}d` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                    <span style={{ fontFamily: "DM Mono", fontSize: 12, color: "#555" }}>{p.horas_logged}h invertidas</span>
+                    <span style={{ fontFamily: "DM Mono", fontSize: 13, color: "#555" }}>{fmtCOP(cobrado)}</span>
+                    <span style={{ fontFamily: "DM Mono", fontSize: 13, color: r.color }}>{fmtCOP(ratePerH)}/h</span>
+                    <span style={{ fontSize: 11, color: r.color, background: r.color + "18", padding: "2px 8px", borderRadius: 20, fontWeight: 700 }}>{r.label}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {(["cliente", "propio", "proposito"] as const).map(tipo => {
-        const grupo = proyectos.filter(p => p.tipo === tipo);
+        const grupo = proyectos.filter(p => p.tipo === tipo && p.estado !== "finalizado");
         if (grupo.length === 0) return null;
         const labels: Record<string, string> = { cliente: "Clientes", propio: "Propios", proposito: "Propósito" };
         const colors: Record<string, string> = { cliente: "#c8922a", propio: "#7c9e6e", proposito: "#7b9ec8" };

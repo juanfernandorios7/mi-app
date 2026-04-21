@@ -244,7 +244,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                     fontSize: 13, fontFamily: "Syne", fontWeight: 600, cursor: "pointer" }}>
                   ○ Todos los proyectos
                 </button>
-                {proyectos.map(p => (
+                {proyectos.filter(p => p.estado !== "finalizado").map(p => (
                   <button key={p.id} onClick={() => { setSelectedProyecto(p.id); setShowProyectoMenu(false); }}
                     style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
                       background: selectedProyecto === p.id ? "#1e1e1e" : "transparent",
@@ -525,7 +525,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                     onChange={e => setNewTarea({ ...newTarea, descripcion: e.target.value })} style={field} />
                   <select value={newTarea.proyecto_id} onChange={e => setNewTarea({ ...newTarea, proyecto_id: e.target.value })} style={field}>
                     <option value="">Selecciona proyecto</option>
-                    {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                    {proyectos.filter(p => p.estado !== "finalizado").map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                   </select>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                     <select value={newTarea.estado} onChange={e => setNewTarea({ ...newTarea, estado: e.target.value })} style={field}>
@@ -585,7 +585,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px", gap: 12 }}>
                     <select value={bulkProyecto} onChange={e => setBulkProyecto(e.target.value)} style={field}>
                       <option value="">Proyecto (opcional)</option>
-                      {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                      {proyectos.filter(p => p.estado !== "finalizado").map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                     </select>
                     <input type="date" value={bulkFecha} onChange={e => setBulkFecha(e.target.value)} style={{ ...field, colorScheme: "dark" }} />
                     <div>
