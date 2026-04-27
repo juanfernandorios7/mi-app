@@ -17,6 +17,31 @@ const EMPTY_TAREA = {
   fecha: today(), tiempo_estimado: 1, tiempo_real: 0,
 };
 
+const DIAS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+function getWeekDays(offset: number): { date: string; label: string; dayName: string; isToday: boolean }[] {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff + offset * 7);
+  const result = [];
+  for (let i = 0; i < 7; i++) {
+    const cur = new Date(d);
+    cur.setDate(d.getDate() + i);
+    const year = cur.getFullYear();
+    const month = String(cur.getMonth() + 1).padStart(2, "0");
+    const dayStr = String(cur.getDate()).padStart(2, "0");
+    const dateKey = `${year}-${month}-${dayStr}`;
+    result.push({
+      date: dateKey,
+      label: `${DIAS[i]} ${cur.getDate()}`,
+      dayName: DIAS[i],
+      isToday: dateKey === today(),
+    });
+  }
+  return result;
+}
+
 const ESTADOS = [
   { key: "pendiente",   label: "Pendientes",   color: "#555"    },
   { key: "en_progreso", label: "En Progreso",   color: "#c8922a" },
@@ -38,11 +63,20 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
   const [bulkFecha, setBulkFecha] = useState(today());
   const [bulkTiempo, setBulkTiempo] = useState(1);
 
+  // Vista
+  const [view, setView] = useState<"kanban" | "semana">("kanban");
+
   // Kanban states
   const [selectedProyecto, setSelectedProyecto] = useState<string>("todos");
   const [showProyectoMenu, setShowProyectoMenu] = useState(false);
   const [movingTask, setMovingTask] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Semana states
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [quickAddDay, setQuickAddDay] = useState<string | null>(null);
+  const [quickTitulo, setQuickTitulo] = useState("");
+  const [quickProyecto, setQuickProyecto] = useState("");
 
   // Edición inline de tarjeta
   const [editingTask, setEditingTask] = useState<string | null>(null);
@@ -111,6 +145,25 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
       setTrackingId(tarea.id); setTrackingStart(Date.now()); setElapsed(0);
     }
   }, [trackingId, elapsed, supabase, proyectos, onTareasChange]);
+
+  const quickAddTask = async (fecha: string) => {
+    if (!quickTitulo.trim()) return;
+    setSaving(true);
+    const { data, error } = await supabase.from("tareas").insert({
+      titulo: quickTitulo.trim(),
+      proyecto_id: quickProyecto || null,
+      estado: "pendiente", prioridad: "media",
+      fecha,
+      tiempo_estimado: 60, tiempo_real: 0,
+    }).select().single();
+    if (!error && data) {
+      setTareas(ts => [...ts, data as Tarea]);
+      setQuickTitulo(""); setQuickProyecto("");
+      setQuickAddDay(null);
+      onTareasChange();
+    }
+    setSaving(false);
+  };
 
   const openEditTask = (task: Tarea) => {
     setEditingTask(task.id);
@@ -214,6 +267,20 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28 }}>Tareas</h2>
 
+          {/* Toggle Kanban / Semana */}
+          <div style={{ display: "flex", gap: 2, background: "#111", border: "1px solid #1e1e1e", borderRadius: 10, padding: 3 }}>
+            {(["kanban", "semana"] as const).map(v => (
+              <button key={v} onClick={() => setView(v)} style={{
+                padding: "5px 14px", borderRadius: 8, border: "none",
+                background: view === v ? "#1e1e1e" : "transparent",
+                color: view === v ? "#c8922a" : "#555",
+                fontSize: 12, fontFamily: "Syne", fontWeight: 700, cursor: "pointer",
+              }}>
+                {v === "kanban" ? "Kanban" : "Semana"}
+              </button>
+            ))}
+          </div>
+
           {/* Selector de proyecto */}
           <div ref={menuRef} style={{ position: "relative" }}>
             <button
@@ -270,7 +337,141 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
       </div>
 
       {/* ── Kanban ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, alignItems: "start" }}>
+      {/* ── Vista Semana ── */}
+      {view === "semana" && (() => {
+        const weekDays = getWeekDays(weekOffset);
+        const monthLabel = new Date(weekDays[0].date).toLocaleDateString("es-CO", { month: "long", year: "numeric" });
+        return (
+          <div>
+            {/* Navegación semana */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+              <button onClick={() => setWeekOffset(w => w - 1)} style={{
+                background: "#111", border: "1px solid #2a2a2a", color: "#666",
+                width: 32, height: 32, borderRadius: 8, fontSize: 16, cursor: "pointer",
+              }}>‹</button>
+              <span style={{ fontSize: 13, color: "#888", fontFamily: "DM Mono", textTransform: "capitalize", minWidth: 160, textAlign: "center" }}>
+                {monthLabel}
+              </span>
+              <button onClick={() => setWeekOffset(w => w + 1)} style={{
+                background: "#111", border: "1px solid #2a2a2a", color: "#666",
+                width: 32, height: 32, borderRadius: 8, fontSize: 16, cursor: "pointer",
+              }}>›</button>
+              {weekOffset !== 0 && (
+                <button onClick={() => setWeekOffset(0)} style={{
+                  background: "transparent", border: "1px solid #2a2a2a", color: "#555",
+                  padding: "4px 12px", borderRadius: 8, fontSize: 11, fontFamily: "Syne", fontWeight: 600, cursor: "pointer",
+                }}>Hoy</button>
+              )}
+            </div>
+
+            {/* Columnas por día */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, alignItems: "start" }}>
+              {weekDays.map(({ date, label, isToday }) => {
+                const dayTasks = tareas.filter(t => t.fecha === date);
+                const isQuickAdd = quickAddDay === date;
+                return (
+                  <div key={date}>
+                    {/* Header día */}
+                    <div style={{
+                      textAlign: "center", marginBottom: 10, padding: "8px 4px",
+                      borderRadius: 10,
+                      background: isToday ? "#c8922a18" : "transparent",
+                      border: isToday ? "1px solid #c8922a33" : "1px solid transparent",
+                    }}>
+                      <p style={{ fontSize: 11, fontFamily: "DM Mono", fontWeight: 700,
+                        color: isToday ? "#c8922a" : "#555",
+                        textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        {label.split(" ")[0]}
+                      </p>
+                      <p style={{ fontSize: 20, fontFamily: "'DM Serif Display', serif",
+                        color: isToday ? "#c8922a" : "#888", lineHeight: 1.2 }}>
+                        {label.split(" ")[1]}
+                      </p>
+                    </div>
+
+                    {/* Tareas del día */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, minHeight: 60 }}>
+                      {dayTasks.map(task => {
+                        const proj = proyectos.find(p => p.id === task.proyecto_id);
+                        const isDone = task.estado === "completada";
+                        return (
+                          <div key={task.id} style={{
+                            background: "#111", border: "1px solid " + (isDone ? "#1a1a1a" : "#1e1e1e"),
+                            borderRadius: 10, padding: "10px 12px",
+                            opacity: isDone ? 0.5 : 1,
+                          }}>
+                            {proj && <div style={{ height: 2, background: proj.color, borderRadius: 2, marginBottom: 6, opacity: 0.7 }} />}
+                            <p style={{
+                              fontSize: 12, fontWeight: 600, lineHeight: 1.3,
+                              color: isDone ? "#555" : "#ddd",
+                              textDecoration: isDone ? "line-through" : "none",
+                              marginBottom: 4,
+                            }}>{task.titulo}</p>
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                              {proj && <span style={{ fontSize: 9, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
+                              <span style={{ fontSize: 9, color: "#444", fontFamily: "DM Mono" }}>{minsToH(task.tiempo_estimado)}</span>
+                              {isDone && <span style={{ fontSize: 9, color: "#7c9e6e", fontFamily: "DM Mono" }}>✓</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Quick add */}
+                      {isQuickAdd ? (
+                        <div style={{ background: "#111", border: "1px solid #3a3a3a", borderRadius: 10, padding: 10 }}>
+                          <input
+                            autoFocus
+                            placeholder="Nombre de la tarea"
+                            value={quickTitulo}
+                            onChange={e => setQuickTitulo(e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") quickAddTask(date); if (e.key === "Escape") { setQuickAddDay(null); setQuickTitulo(""); } }}
+                            style={{ width: "100%", background: "transparent", border: "none", color: "#fff",
+                              fontSize: 12, fontFamily: "Syne", outline: "none", marginBottom: 8 }}
+                          />
+                          <select value={quickProyecto} onChange={e => setQuickProyecto(e.target.value)}
+                            style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a",
+                              borderRadius: 6, padding: "4px 8px", color: "#888", fontSize: 11,
+                              fontFamily: "Syne", outline: "none", marginBottom: 8 }}>
+                            <option value="">Sin proyecto</option>
+                            {proyectos.filter(p => p.estado !== "finalizado").map(p =>
+                              <option key={p.id} value={p.id}>{p.nombre}</option>
+                            )}
+                          </select>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button onClick={() => quickAddTask(date)} disabled={saving} style={{
+                              flex: 1, background: "#c8922a22", border: "1px solid #c8922a66",
+                              color: "#c8922a", borderRadius: 6, padding: "4px 0",
+                              fontSize: 11, fontFamily: "Syne", fontWeight: 700, cursor: "pointer",
+                            }}>Agregar</button>
+                            <button onClick={() => { setQuickAddDay(null); setQuickTitulo(""); }} style={{
+                              background: "transparent", border: "1px solid #2a2a2a", color: "#555",
+                              borderRadius: 6, padding: "4px 8px", fontSize: 11, cursor: "pointer",
+                            }}>✕</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button onClick={() => { setQuickAddDay(date); setQuickTitulo(""); setQuickProyecto(""); }}
+                          style={{
+                            width: "100%", background: "transparent",
+                            border: "1px dashed #1e1e1e", borderRadius: 10,
+                            color: "#333", padding: "8px 0", fontSize: 18,
+                            cursor: "pointer", transition: "all 0.15s",
+                          }}
+                          onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#3a3a3a"; (e.target as HTMLElement).style.color = "#555"; }}
+                          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#1e1e1e"; (e.target as HTMLElement).style.color = "#333"; }}
+                        >+</button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Vista Kanban ── */}
+      <div style={{ display: view === "kanban" ? "grid" : "none", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, alignItems: "start" }}>
         {ESTADOS.map(({ key, label, color }) => {
           const col = byEstado(key);
           return (
