@@ -31,6 +31,12 @@ function getMonthStart(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
 
+function getWeekEnd(): string {
+  const d = new Date(getWeekStart());
+  d.setDate(d.getDate() + 6);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function filterByPeriodo(tareas: Tarea[], periodo: Periodo): Tarea[] {
   const t = today();
   if (periodo === "hoy") return tareas.filter(t2 => t2.fecha === t);
@@ -153,8 +159,27 @@ function ProyectoBlock({ titulo, proyectos, tareas, accentColor, descripcion }: 
 export default function Dashboard({ proyectos, tareas, capacidadHoras }: DashboardProps) {
   const [periodo, setPeriodo] = useState<Periodo>("hoy");
 
-  // Alerta sobresaturación semanal
+  // ── Semana completa (lunes → domingo) ────────────────────────────────────────
   const weekStart = getWeekStart();
+  const weekEnd   = getWeekEnd();
+  const tareasSemana = tareas.filter(t => t.fecha >= weekStart && t.fecha <= weekEnd);
+
+  // Trabajadas: horas reales ya logueadas esta semana
+  const horasTrabajadasSemana = tareasSemana
+    .filter(t => t.tiempo_real > 0)
+    .reduce((a, t) => a + t.tiempo_real / 60, 0);
+
+  // Comprometidas: tiempo estimado de tareas pendientes/en progreso de la semana
+  const horasCompromatidasSemana = tareasSemana
+    .filter(t => t.estado === "pendiente" || t.estado === "en_progreso")
+    .reduce((a, t) => a + t.tiempo_estimado / 60, 0);
+
+  // Disponibles: lo que queda de capacidad semanal
+  const horasDisponiblesSemana = Math.max(0, capacidadHoras - horasTrabajadasSemana - horasCompromatidasSemana);
+  const horasUsadasSemana = horasTrabajadasSemana + horasCompromatidasSemana;
+  const sobreSaturada = horasUsadasSemana > capacidadHoras;
+
+  // Para la alerta de saturación usamos solo las ya trabajadas (igual que antes)
   const weekTareas = tareas.filter(t => t.fecha >= weekStart && t.fecha <= today());
   const horasSemanales = weekTareas.reduce((a, t) => a + t.tiempo_real / 60, 0);
   const capacidadSemanal = capacidadHoras;
@@ -246,6 +271,83 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
           </div>
         </div>
       )}
+
+      {/* ── Esta semana ── */}
+      <div style={{ background: "#111", border: "1px solid #1e1e1e", borderRadius: 20, padding: "24px 28px", marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+          <p style={{ fontSize: 11, color: "#555", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
+            Esta semana
+          </p>
+          {sobreSaturada && (
+            <span style={{ fontSize: 11, color: "#b05a5a", background: "#b05a5a12", border: "1px solid #b05a5a33", padding: "2px 10px", borderRadius: 20, fontFamily: "DM Mono", fontWeight: 700 }}>
+              +{(horasUsadasSemana - capacidadHoras).toFixed(1)}h sobre capacidad
+            </span>
+          )}
+        </div>
+
+        {/* 3 métricas */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 18 }}>
+          {/* Trabajadas */}
+          <div style={{ background: "#0f0f0f", border: "1px solid #1a1a1a", borderRadius: 14, padding: "16px 18px" }}>
+            <p style={{ fontSize: 10, color: "#7c9e6e", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Trabajadas</p>
+            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#7c9e6e", lineHeight: 1 }}>
+              {horasTrabajadasSemana.toFixed(1)}<span style={{ fontSize: 14, opacity: 0.6 }}>h</span>
+            </p>
+            <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginTop: 6 }}>horas reales registradas</p>
+          </div>
+
+          {/* Comprometidas */}
+          <div style={{ background: "#0f0f0f", border: "1px solid #1a1a1a", borderRadius: 14, padding: "16px 18px" }}>
+            <p style={{ fontSize: 10, color: "#c8922a", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Comprometidas</p>
+            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#c8922a", lineHeight: 1 }}>
+              {horasCompromatidasSemana.toFixed(1)}<span style={{ fontSize: 14, opacity: 0.6 }}>h</span>
+            </p>
+            <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginTop: 6 }}>tareas pendientes esta semana</p>
+          </div>
+
+          {/* Disponibles */}
+          <div style={{ background: "#0f0f0f", border: `1px solid ${sobreSaturada ? "#b05a5a33" : "#1a1a1a"}`, borderRadius: 14, padding: "16px 18px" }}>
+            <p style={{ fontSize: 10, color: sobreSaturada ? "#b05a5a" : "#6e8eb0", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+              {sobreSaturada ? "Sobre-comprometido" : "Disponibles"}
+            </p>
+            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: sobreSaturada ? "#b05a5a" : "#6e8eb0", lineHeight: 1 }}>
+              {sobreSaturada ? (horasUsadasSemana - capacidadHoras).toFixed(1) : horasDisponiblesSemana.toFixed(1)}
+              <span style={{ fontSize: 14, opacity: 0.6 }}>h</span>
+            </p>
+            <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginTop: 6 }}>
+              {sobreSaturada ? "por encima de tu capacidad" : `de ${capacidadHoras}h capacidad semanal`}
+            </p>
+          </div>
+        </div>
+
+        {/* Barra combinada */}
+        <div>
+          <div style={{ height: 8, background: "#1a1a1a", borderRadius: 4, overflow: "hidden", display: "flex" }}>
+            <div style={{
+              height: "100%", borderRadius: "4px 0 0 4px",
+              width: Math.min(100, (horasTrabajadasSemana / capacidadHoras) * 100) + "%",
+              background: "#7c9e6e", transition: "width 0.6s ease",
+            }} />
+            <div style={{
+              height: "100%",
+              width: Math.min(100 - Math.min(100, (horasTrabajadasSemana / capacidadHoras) * 100),
+                              (horasCompromatidasSemana / capacidadHoras) * 100) + "%",
+              background: "#c8922a", transition: "width 0.6s ease",
+            }} />
+          </div>
+          <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
+            <span style={{ fontSize: 10, color: "#7c9e6e", fontFamily: "DM Mono", display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#7c9e6e", display: "inline-block" }} /> Trabajadas
+            </span>
+            <span style={{ fontSize: 10, color: "#c8922a", fontFamily: "DM Mono", display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#c8922a", display: "inline-block" }} /> Comprometidas
+            </span>
+            <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginLeft: "auto" }}>
+              {horasUsadasSemana.toFixed(1)}h / {capacidadHoras}h
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* ── Bloque rendimiento ── */}
       <div style={{ background: "#111", border: "1px solid #1e1e1e", borderRadius: 20, padding: "28px 32px", marginBottom: 20 }}>

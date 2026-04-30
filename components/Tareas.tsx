@@ -9,6 +9,7 @@ interface TareasProps {
   initialTareas: Tarea[];
   proyectos: Proyecto[];
   onTareasChange: () => void;
+  capacidadHoras?: number;
 }
 
 const EMPTY_TAREA = {
@@ -48,7 +49,7 @@ const ESTADOS = [
   { key: "completada",  label: "Finalizadas",   color: "#7c9e6e" },
 ] as const;
 
-export default function Tareas({ initialTareas, proyectos, onTareasChange }: TareasProps) {
+export default function Tareas({ initialTareas, proyectos, onTareasChange, capacidadHoras = 40 }: TareasProps) {
   const supabase = createClient();
   const [tareas, setTareas] = useState<Tarea[]>(initialTareas);
 
@@ -382,6 +383,15 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
               {weekDays.map(({ date, label, isToday }) => {
                 const dayTasks = tareas.filter(t => t.fecha === date);
                 const isQuickAdd = quickAddDay === date;
+
+                // Capacidad y carga del día
+                const dailyCap = capacidadHoras / 5;
+                const dayWorked = dayTasks.filter(t => t.tiempo_real > 0).reduce((a, t) => a + t.tiempo_real / 60, 0);
+                const dayCommitted = dayTasks.filter(t => t.estado === "pendiente" || t.estado === "en_progreso").reduce((a, t) => a + t.tiempo_estimado / 60, 0);
+                const dayTotal = dayWorked + dayCommitted;
+                const dayPct = Math.min(100, (dayTotal / dailyCap) * 100);
+                const barColor = dayPct >= 90 ? "#b05a5a" : dayPct >= 70 ? "#c8922a" : "#7c9e6e";
+
                 return (
                   <div key={date}>
                     {/* Header día */}
@@ -400,6 +410,17 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                         color: isToday ? "#c8922a" : "#888", lineHeight: 1.2 }}>
                         {label.split(" ")[1]}
                       </p>
+                      {/* Barra de carga diaria */}
+                      {dayTasks.length > 0 && (
+                        <div style={{ marginTop: 6, padding: "0 4px" }}>
+                          <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: dayPct + "%", background: barColor, borderRadius: 2, transition: "width 0.4s ease" }} />
+                          </div>
+                          <p style={{ fontSize: 9, fontFamily: "DM Mono", color: barColor, marginTop: 3, opacity: 0.8 }}>
+                            {dayTotal.toFixed(1)}h
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Tareas del día */}

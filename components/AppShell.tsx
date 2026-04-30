@@ -51,6 +51,7 @@ export default function AppShell({ proyectos, tareas, config }: AppShellProps) {
             initialTareas={tareas}
             proyectos={proyectos}
             onTareasChange={refresh}
+            capacidadHoras={capacidadHoras}
           />
         )}
         {view === "proyectos" && (
