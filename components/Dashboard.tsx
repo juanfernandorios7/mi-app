@@ -123,6 +123,18 @@ function ProyectoBlock({ titulo, proyectos, accentColor, descripcion }: {
 export default function Dashboard({ proyectos, tareas, capacidadHoras }: DashboardProps) {
   const [periodo, setPeriodo] = useState<Periodo>("hoy");
 
+  // Alerta sobresaturación semanal
+  const weekStart = getWeekStart();
+  const weekTareas = tareas.filter(t => t.fecha >= weekStart && t.fecha <= today());
+  const horasSemanales = weekTareas.reduce((a, t) => a + t.tiempo_real / 60, 0);
+  const capacidadSemanal = capacidadHoras;
+  const pctSemana = Math.round((horasSemanales / capacidadSemanal) * 100);
+  const saturacion = pctSemana >= 95
+    ? { color: "#b05a5a", bg: "#b05a5a12", border: "#b05a5a33", emoji: "🔴", msg: "Estás saturado — antes de aceptar algo nuevo, ¿qué puedes mover o delegar?" }
+    : pctSemana >= 80
+    ? { color: "#c8922a", bg: "#c8922a12", border: "#c8922a33", emoji: "🟡", msg: "Estás cerca del límite — evalúa qué puede esperar o delegar." }
+    : null;
+
   const CAPACITY_HOURS = capacidadHoras;
   const allProjectHours = proyectos.reduce((a, p) => a + p.horas_logged, 0);
   const capacityPct = Math.min(100, Math.round((allProjectHours / (CAPACITY_HOURS * 4)) * 100));
@@ -171,6 +183,32 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
 
   return (
     <div className="fade-up">
+
+      {/* ── Alerta sobresaturación ── */}
+      {saturacion && (
+        <div style={{
+          background: saturacion.bg, border: "1px solid " + saturacion.border,
+          borderRadius: 14, padding: "14px 20px", marginBottom: 16,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 18 }}>{saturacion.emoji}</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: saturacion.color, fontFamily: "Syne", marginBottom: 2 }}>
+                Esta semana llevas {horasSemanales.toFixed(1)}h de {capacidadSemanal}h — {pctSemana}% de tu capacidad
+              </p>
+              <p style={{ fontSize: 12, color: saturacion.color, opacity: 0.8, fontFamily: "DM Mono" }}>
+                {saturacion.msg}
+              </p>
+            </div>
+          </div>
+          <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: saturacion.color, opacity: 0.4 }}>
+            {capacidadSemanal - Math.round(horasSemanales) > 0
+              ? `${capacidadSemanal - Math.round(horasSemanales)}h restantes`
+              : "Sin espacio"}
+          </div>
+        </div>
+      )}
 
       {/* ── Bloque rendimiento ── */}
       <div style={{ background: "#111", border: "1px solid #1e1e1e", borderRadius: 20, padding: "28px 32px", marginBottom: 20 }}>

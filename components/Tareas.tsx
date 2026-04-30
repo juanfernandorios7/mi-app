@@ -70,6 +70,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
   const [selectedProyecto, setSelectedProyecto] = useState<string>("todos");
   const [showProyectoMenu, setShowProyectoMenu] = useState(false);
   const [movingTask, setMovingTask] = useState<string | null>(null);
+  const [confirmDeleteTask, setConfirmDeleteTask] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Semana states
@@ -118,11 +119,21 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
 
   const selectedProyectoObj = proyectos.find(p => p.id === selectedProyecto);
 
-  // Mover tarea de estado
+  // Mover tarea de estado (auto-fecha al completar)
   const moveTask = async (tarea: Tarea, newEstado: string) => {
-    setTareas(ts => ts.map(t => t.id === tarea.id ? { ...t, estado: newEstado as Tarea["estado"] } : t));
-    await supabase.from("tareas").update({ estado: newEstado }).eq("id", tarea.id);
+    const updates: Record<string, string> = { estado: newEstado };
+    if (newEstado === "completada") updates.fecha = today();
+    setTareas(ts => ts.map(t => t.id === tarea.id ? { ...t, ...updates } as Tarea : t));
+    await supabase.from("tareas").update(updates).eq("id", tarea.id);
     setMovingTask(null);
+    onTareasChange();
+  };
+
+  // Eliminar tarea
+  const deleteTask = async (id: string) => {
+    setTareas(ts => ts.filter(t => t.id !== id));
+    setConfirmDeleteTask(null);
+    await supabase.from("tareas").delete().eq("id", id);
     onTareasChange();
   };
 
@@ -607,17 +618,42 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange }: Tar
                       ) : (
                         /* ── Modo vista ── */
                         <>
-                          {/* Título + botón editar */}
+                          {/* Título + botones editar/eliminar */}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 8 }}>
                             <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#555" : "#ddd",
                               textDecoration: key === "completada" ? "line-through" : "none", lineHeight: 1.4, flex: 1 }}>
                               {task.titulo}
                             </p>
-                            <button onClick={() => openEditTask(task)} style={{
-                              background: "transparent", border: "none", color: "#444",
-                              fontSize: 13, cursor: "pointer", padding: "0 2px", flexShrink: 0,
-                            }} title="Editar">✎</button>
+                            <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                              <button onClick={() => openEditTask(task)} style={{
+                                background: "transparent", border: "none", color: "#444",
+                                fontSize: 13, cursor: "pointer", padding: "0 2px",
+                              }} title="Editar">✎</button>
+                              <button onClick={() => setConfirmDeleteTask(confirmDeleteTask === task.id ? null : task.id)} style={{
+                                background: "transparent", border: "none", color: "#444",
+                                fontSize: 14, cursor: "pointer", padding: "0 2px",
+                              }} title="Eliminar">×</button>
+                            </div>
                           </div>
+
+                          {/* Confirmación eliminar */}
+                          {confirmDeleteTask === task.id && (
+                            <div style={{ background: "#b05a5a12", border: "1px solid #b05a5a33",
+                              borderRadius: 8, padding: "10px 12px", marginBottom: 10,
+                              display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontSize: 11, color: "#b05a5a" }}>¿Eliminar esta tarea?</span>
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <button onClick={() => setConfirmDeleteTask(null)} style={{
+                                  background: "transparent", border: "1px solid #333", color: "#666",
+                                  padding: "3px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Syne", cursor: "pointer",
+                                }}>No</button>
+                                <button onClick={() => deleteTask(task.id)} style={{
+                                  background: "#b05a5a22", border: "1px solid #b05a5a", color: "#b05a5a",
+                                  padding: "3px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Syne", fontWeight: 700, cursor: "pointer",
+                                }}>Sí</button>
+                              </div>
+                            </div>
+                          )}
 
                           {/* Meta */}
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
