@@ -52,22 +52,52 @@ function getWeekDays(): { key: string; label: string }[] {
   return result;
 }
 
+// ── Tarifa horaria real de un proyecto ────────────────────────────────────────
+// Recurrente: valor_mensual / 160h (mes estándar de trabajo)
+// Único: solo cuando hay ≥5h reales trabajadas (usa horasReales si se pasa, sino horas_logged)
+function getHourlyRate(p: Proyecto, horasReales?: number): number | null {
+  if (p.tipo_cobro === "recurrente") {
+    if (!p.valor_mensual || p.valor_mensual === 0) return null;
+    return p.valor_mensual / 160;
+  }
+  // único: necesita mínimo 5h para ser representativo
+  if (!p.valor_total || p.valor_total === 0) return null;
+  const horas = horasReales ?? p.horas_logged;
+  if (horas < 5) return null;
+  return p.valor_total / horas;
+}
+
 // ── Bloque de proyectos por tipo ──────────────────────────────────────────────
-function ProyectoBlock({ titulo, proyectos, accentColor, descripcion }: {
-  titulo: string; proyectos: Proyecto[]; accentColor: string; descripcion?: string;
+function ProyectoBlock({ titulo, proyectos, tareas, accentColor, descripcion }: {
+  titulo: string; proyectos: Proyecto[]; tareas: Tarea[]; accentColor: string; descripcion?: string;
 }) {
   if (proyectos.length === 0) return null;
   const activos = proyectos.filter(p => p.estado !== "finalizado");
   if (activos.length === 0) return null;
 
-  const totalHoras = activos.reduce((a, p) => a + p.horas_logged, 0);
-  const totalCobrado = activos.reduce((a, p) => a + (p.valor_total || p.valor_mensual || 0), 0);
-  const tarifaEfectiva = totalCobrado / (totalHoras || 1);
+  // Horas calculadas desde tareas (siempre sincronizado)
+  const getHorasProy = (p: Proyecto) =>
+    +(tareas.filter(t => t.proyecto_id === p.id).reduce((a, t) => a + t.tiempo_real / 60, 0)).toFixed(2);
+
+  const totalHoras = activos.reduce((a, p) => a + getHorasProy(p), 0);
+  const totalCobrado = activos.reduce((a, p) => a + (p.valor_mensual || p.valor_total || 0), 0);
+
+  // Tarifa ponderada por horas: solo proyectos con rate calculable
+  const { pesoTotal, ingresosPonderados } = activos.reduce((acc, p) => {
+    const hrs = getHorasProy(p);
+    const rate = getHourlyRate(p, hrs);
+    if (rate !== null && hrs > 0) {
+      acc.ingresosPonderados += rate * hrs;
+      acc.pesoTotal += hrs;
+    }
+    return acc;
+  }, { pesoTotal: 0, ingresosPonderados: 0 });
+  const tarifaEfectiva = pesoTotal > 0 ? ingresosPonderados / pesoTotal : null;
 
   const chartData = activos.map(p => {
-    const cobrado = p.valor_total || p.valor_mensual || 0;
+    const rate = getHourlyRate(p, getHorasProy(p));
     const r = getRentabilidad(p);
-    return { name: p.nombre.split(" ")[0], rate: Math.round(cobrado / (p.horas_logged || 1)), color: r.color };
+    return { name: p.nombre.split(" ")[0], rate: rate ? Math.round(rate) : 0, color: r.color };
   });
 
   return (
@@ -80,7 +110,7 @@ function ProyectoBlock({ titulo, proyectos, accentColor, descripcion }: {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
         <StatBox label="Horas totales"   value={totalHoras.toFixed(1) + "h"} />
         <StatBox label="Total cobrado"   value={totalCobrado > 0 ? fmtCOP(totalCobrado) : "—"} />
-        <StatBox label="Tarifa efectiva" value={totalCobrado > 0 ? fmtCOP(Math.round(tarifaEfectiva)) + "/h" : "—"} />
+        <StatBox label="Tarifa efectiva" value={tarifaEfectiva !== null ? fmtCOP(Math.round(tarifaEfectiva)) + "/h" : "—"} />
       </div>
       {chartData.some(d => d.rate > 0) && (
         <div style={{ marginBottom: 20 }}>
@@ -109,7 +139,7 @@ function ProyectoBlock({ titulo, proyectos, accentColor, descripcion }: {
                 <span style={{ fontSize: 10, color: r.color, fontWeight: 700, background: r.color + "18", padding: "2px 7px", borderRadius: 20 }}>{r.label}</span>
               </div>
               <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, color: "#ddd" }}>{p.nombre}</p>
-              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#555", marginBottom: 4 }}>{p.horas_logged}h invertidas</p>
+              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#555", marginBottom: 4 }}>{getHorasProy(p)}h invertidas</p>
               {cobrado > 0 && <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: p.color }}>{fmtCOP(cobrado)}</p>}
             </div>
           );
@@ -136,7 +166,8 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
     : null;
 
   const CAPACITY_HOURS = capacidadHoras;
-  const allProjectHours = proyectos.reduce((a, p) => a + p.horas_logged, 0);
+  // Horas totales siempre calculadas desde tareas (nunca desincronizadas)
+  const allProjectHours = tareas.reduce((a, t) => a + t.tiempo_real / 60, 0);
   const capacityPct = Math.min(100, Math.round((allProjectHours / (CAPACITY_HOURS * 4)) * 100));
   const capStatus = getCapacityStatus(capacityPct);
 
@@ -150,6 +181,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
     : null;
 
   // Tarifa efectiva del período: promedio ponderado por horas de cada proyecto
+  // Usa horas calculadas desde tareas (nunca horas_logged desincronizado)
   const tarifaPeriodo = (() => {
     let totalIngresosPonderados = 0;
     let totalHoras = 0;
@@ -158,10 +190,15 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
         .filter(t => t.proyecto_id === p.id)
         .reduce((a, t) => a + t.tiempo_real / 60, 0);
       if (horasEnPeriodo > 0) {
-        const cobrado = p.valor_total || p.valor_mensual || 0;
-        const tarifa = cobrado / (p.horas_logged || 1);
-        totalIngresosPonderados += tarifa * horasEnPeriodo;
-        totalHoras += horasEnPeriodo;
+        // Horas totales del proyecto (fuente de verdad desde tareas)
+        const horasTotalesProyecto = tareas
+          .filter(t => t.proyecto_id === p.id)
+          .reduce((a, t) => a + t.tiempo_real / 60, 0);
+        const rate = getHourlyRate(p, horasTotalesProyecto);
+        if (rate !== null) {
+          totalIngresosPonderados += rate * horasEnPeriodo;
+          totalHoras += horasEnPeriodo;
+        }
       }
     });
     return totalHoras > 0 ? Math.round(totalIngresosPonderados / totalHoras) : null;
@@ -357,20 +394,19 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
             </p>
             <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <StatBox label="Proyectos activos" value={proyectos.filter(p => p.estado !== "finalizado").length} />
-              <StatBox label="Mejor tarifa" value={
-                proyectos.length > 0
-                  ? fmtCOP(Math.max(...proyectos.map(p => (p.valor_total || p.valor_mensual || 0) / (p.horas_logged || 1)))) + "/h"
-                  : "—"
-              } />
+              <StatBox label="Mejor tarifa" value={(() => {
+                const rates = proyectos.map(p => getHourlyRate(p)).filter((r): r is number => r !== null);
+                return rates.length > 0 ? fmtCOP(Math.max(...rates)) + "/h" : "—";
+              })()} />
             </div>
           </div>
         </div>
       </div>
 
       {/* ── 3 bloques por tipo ── */}
-      <ProyectoBlock titulo="Clientes"  proyectos={clientes}  accentColor="#c8922a" descripcion="proyectos facturados" />
-      <ProyectoBlock titulo="Propios"   proyectos={propios}   accentColor="#7c9e6e" descripcion="tiempo vs. retorno" />
-      <ProyectoBlock titulo="Propósito" proyectos={proposito} accentColor="#7b9ec8" descripcion="impacto sobre lucro" />
+      <ProyectoBlock titulo="Clientes"  proyectos={clientes}  tareas={tareas} accentColor="#c8922a" descripcion="proyectos facturados" />
+      <ProyectoBlock titulo="Propios"   proyectos={propios}   tareas={tareas} accentColor="#7c9e6e" descripcion="tiempo vs. retorno" />
+      <ProyectoBlock titulo="Propósito" proyectos={proposito} tareas={tareas} accentColor="#7b9ec8" descripcion="impacto sobre lucro" />
     </div>
   );
 }

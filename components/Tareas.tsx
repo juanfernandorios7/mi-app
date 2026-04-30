@@ -51,6 +51,8 @@ const ESTADOS = [
 export default function Tareas({ initialTareas, proyectos, onTareasChange }: TareasProps) {
   const supabase = createClient();
   const [tareas, setTareas] = useState<Tarea[]>(initialTareas);
+
+  useEffect(() => { setTareas(initialTareas); }, [initialTareas]);
   const [showAdd, setShowAdd] = useState(false);
   const [newTarea, setNewTarea] = useState({ ...EMPTY_TAREA });
   const [trackingId, setTrackingId] = useState<string | null>(null);

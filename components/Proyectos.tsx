@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Proyecto, Tarea } from "@/lib/types";
 import { fmtCOP, minsToH, getRentabilidad, getDiasActivo, getAlertaDuracion, today, btnStyle, inputStyle, ACCENT_COLORS } from "@/lib/utils";
@@ -16,6 +16,9 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   const supabase = createClient();
   const [proyectos, setProyectos] = useState<Proyecto[]>(initialProyectos);
   const [tareas, setTareas] = useState<Tarea[]>(initialTareas);
+
+  useEffect(() => { setProyectos(initialProyectos); }, [initialProyectos]);
+  useEffect(() => { setTareas(initialTareas); }, [initialTareas]);
   const [showAddProject, setShowAddProject] = useState(false);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [addTaskForProject, setAddTaskForProject] = useState<string | null>(null);
@@ -338,9 +341,11 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
         {grupo.map(p => {
           const r = getRentabilidad(p);
           const cobrado = p.valor_total || p.valor_mensual || 0;
-          const ratePerH = Math.round(cobrado / (p.horas_logged || 1));
-          const pct = Math.min(100, Math.round((p.horas_logged / 40) * 100));
           const projTasks = tareas.filter(t => t.proyecto_id === p.id);
+          // Calcular horas siempre desde las tareas (más confiable que horas_logged)
+          const horasProyecto = +(projTasks.reduce((a, t) => a + t.tiempo_real / 60, 0)).toFixed(2);
+          const ratePerH = Math.round(cobrado / (horasProyecto || 1));
+          const pct = Math.min(100, Math.round((horasProyecto / 40) * 100));
           const doneProjTasks = projTasks.filter(t => t.estado === "completada").length;
           const isExpanded = expandedProject === p.id;
           const diasActivo = getDiasActivo(p);
@@ -388,7 +393,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                     <span style={{ fontSize: 11, color: r.color, fontWeight: 700, background: r.color + "20", padding: "3px 10px", borderRadius: 20 }}>
                       {r.label}
                     </span>
-                    <span style={{ fontFamily: "DM Mono", fontSize: 13, color: p.color }}>{fmtCOP(ratePerH)}/h</span>
+                    <span style={{ fontFamily: "DM Mono", fontSize: 13, color: p.color }}>{horasProyecto > 0 ? fmtCOP(ratePerH) + "/h" : "—"}</span>
                     {/* Botón editar */}
                     <button
                       onClick={e => { e.stopPropagation(); editingProject === p.id ? setEditingProject(null) : startEdit(p); }}
@@ -438,7 +443,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                 {/* Mini metrics */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 16 }}>
                   <MetricBox label="Cobrado"     value={fmtCOP(cobrado)}          color={p.color} />
-                  <MetricBox label="Horas"       value={p.horas_logged + "h"}     color="#666" />
+                  <MetricBox label="Horas"       value={horasProyecto + "h"}      color="#666" />
                   <MetricBox label="Tarifa/h"    value={fmtCOP(ratePerH)}         color={r.color} />
                   {diasActivo !== null
                     ? <MetricBox label={p.fecha_fin ? "Duración" : "Días abierto"} value={diasActivo + "d"} color={alerta ? (alerta.nivel === "danger" ? "#b05a5a" : "#c8922a") : "#666"} />
