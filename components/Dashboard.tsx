@@ -467,7 +467,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
 
       {/* ── Capacity hero ── */}
       <div style={{
-        background: "linear-gradient(135deg, #111 0%, #FFFFFF 100%)",
+        background: "#FFFFFF",
         border: "1px solid #E0D8CE", borderRadius: 20, padding: "32px 36px",
         marginBottom: 20, position: "relative", overflow: "hidden",
       }}>
@@ -476,7 +476,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 24 }}>
           <div>
-            <p style={{ fontSize: 11, color: "#aaa", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
+            <p style={{ fontSize: 11, color: "#6b6258", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
               Capacidad mensual
             </p>
             <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 64, lineHeight: 1, color: capStatus.color, marginBottom: 12 }}>
