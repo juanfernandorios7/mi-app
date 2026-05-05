@@ -67,8 +67,8 @@ export const btnStyle = (color: string): React.CSSProperties => ({
 });
 
 export const inputStyle: React.CSSProperties = {
-  background: "#1c1917",
-  border: "1px solid #3a3530",
+  background: "#2a2018",
+  border: "1px solid #4e4038",
   borderRadius: 10,
   padding: "10px 14px",
   color: "#f0ebe3",

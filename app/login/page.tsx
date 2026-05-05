@@ -36,11 +36,11 @@ export default function LoginPage() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#141210", display: "flex",
+      minHeight: "100vh", background: "#1c1510", display: "flex",
       alignItems: "center", justifyContent: "center",
     }}>
       <div style={{
-        background: "#1a1714", border: "1px solid #2d2926", borderRadius: 24,
+        background: "#261d14", border: "1px solid #3d3028", borderRadius: 24,
         padding: "48px 40px", width: "100%", maxWidth: 400,
       }}>
         {/* Logo */}
@@ -75,7 +75,7 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 style={{
-                  background: "#1c1917", border: "1px solid #3a3530", borderRadius: 10,
+                  background: "#2a2018", border: "1px solid #4e4038", borderRadius: 10,
                   padding: "12px 16px", color: "#f0ebe3", fontSize: 14,
                   fontFamily: "'Syne', sans-serif", outline: "none", width: "100%",
                 }}
@@ -99,9 +99,9 @@ export default function LoginPage() {
             </button>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-              <div style={{ flex: 1, height: 1, background: "#2d2926" }} />
+              <div style={{ flex: 1, height: 1, background: "#3d3028" }} />
               <span style={{ fontSize: 11, color: "#444" }}>o</span>
-              <div style={{ flex: 1, height: 1, background: "#2d2926" }} />
+              <div style={{ flex: 1, height: 1, background: "#3d3028" }} />
             </div>
 
             <button
@@ -109,7 +109,7 @@ export default function LoginPage() {
               onClick={handleGoogle}
               style={{
                 width: "100%", padding: "12px", borderRadius: 10,
-                background: "#252019", border: "1px solid #3a3530",
+                background: "#38291e", border: "1px solid #4e4038",
                 color: "#aaa", fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 600,
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}
