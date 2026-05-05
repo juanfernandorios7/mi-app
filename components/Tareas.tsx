@@ -47,8 +47,8 @@ function getWeekDays(offset: number): { date: string; label: string; dayName: st
 
 const ESTADOS = [
   { key: "pendiente",   label: "Pendientes",   color: "#555"    },
-  { key: "en_progreso", label: "En Progreso",   color: "#c8922a" },
-  { key: "completada",  label: "Finalizadas",   color: "#7c9e6e" },
+  { key: "en_progreso", label: "En Progreso",   color: "#C8893A" },
+  { key: "completada",  label: "Finalizadas",   color: "#5C6B4A" },
 ] as const;
 
 export default function Tareas({ initialTareas, proyectos, onTareasChange, capacidadHoras = 40, timer }: TareasProps) {
@@ -300,8 +300,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
   const bulkLines = bulkText.split("\n").filter(l => l.trim().length > 0).length;
 
   const field: React.CSSProperties = {
-    background: "#FAF7F3", border: "1px solid #D4C9BC", borderRadius: 12,
-    padding: "14px 16px", color: "#1a1510", fontSize: 14,
+    background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 12,
+    padding: "14px 16px", color: "#2A2520", fontSize: 14,
     fontFamily: "'Syne', sans-serif", outline: "none", width: "100%",
   };
 
@@ -314,17 +314,17 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
       {/* ── Banner rollover ── */}
       {atrasadas.length > 0 && !rolloverDismissed && (
         <div style={{
-          background: "#c8922a0f", border: "1px solid #c8922a33",
+          background: "#C8893A0F", border: "1px solid #C8893A33",
           borderRadius: 14, padding: "14px 20px", marginBottom: 20,
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 16 }}>📋</span>
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#c8922a", fontFamily: "Syne", marginBottom: 2 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#C8893A", fontFamily: "Syne", marginBottom: 2 }}>
                 {atrasadas.length} tarea{atrasadas.length > 1 ? "s" : ""} pendiente{atrasadas.length > 1 ? "s" : ""} de días anteriores
               </p>
-              <p style={{ fontSize: 11, color: "#c8922a", opacity: 0.7, fontFamily: "DM Mono" }}>
+              <p style={{ fontSize: 11, color: "#C8893A", opacity: 0.7, fontFamily: "DM Mono" }}>
                 {atrasadas.map(t => t.titulo).slice(0, 3).join(" · ")}{atrasadas.length > 3 ? ` · +${atrasadas.length - 3} más` : ""}
               </p>
             </div>
@@ -334,7 +334,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
               onClick={rolloverToday}
               disabled={rolloverSaving}
               style={{
-                background: "#c8922a", border: "none", color: "#1a1510",
+                background: "#C8893A", border: "none", color: "#2A2520",
                 padding: "8px 18px", borderRadius: 9,
                 fontSize: 12, fontFamily: "Syne", fontWeight: 700,
               }}
@@ -344,7 +344,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
             <button
               onClick={() => setRolloverDismissed(true)}
               style={{
-                background: "transparent", border: "1px solid #c8922a44", color: "#c8922a",
+                background: "transparent", border: "1px solid #C8893A44", color: "#C8893A",
                 padding: "8px 14px", borderRadius: 9,
                 fontSize: 12, fontFamily: "Syne", fontWeight: 600, opacity: 0.6,
               }}
@@ -360,12 +360,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28 }}>Tareas</h2>
 
-          <div style={{ display: "flex", gap: 2, background: "#FAF7F3", border: "1px solid #E0D8CE", borderRadius: 10, padding: 3 }}>
+          <div style={{ display: "flex", gap: 2, background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 10, padding: 3 }}>
             {(["kanban", "semana"] as const).map(v => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: "5px 14px", borderRadius: 8, border: "none",
-                background: view === v ? "#E0D8CE" : "transparent",
-                color: view === v ? "#c8922a" : "#555",
+                background: view === v ? "#E5D4B8" : "transparent",
+                color: view === v ? "#C8893A" : "#555",
                 fontSize: 12, fontFamily: "Syne", fontWeight: 700,
               }}>
                 {v === "kanban" ? "Kanban" : "Semana"}
@@ -378,12 +378,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
               onClick={() => setShowProyectoMenu(v => !v)}
               style={{
                 display: "flex", alignItems: "center", gap: 8,
-                background: "#FAF7F3", border: "1px solid #D4C9BC", borderRadius: 10,
+                background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 10,
                 padding: "7px 14px",
               }}
             >
               {selectedProyectoObj
-                ? <><div style={{ width: 7, height: 7, borderRadius: "50%", background: selectedProyectoObj.color }} /><span style={{ fontSize: 13, color: "#2a2018", fontFamily: "Syne", fontWeight: 600 }}>{selectedProyectoObj.nombre}</span></>
+                ? <><div style={{ width: 7, height: 7, borderRadius: "50%", background: selectedProyectoObj.color }} /><span style={{ fontSize: 13, color: "#2A2520", fontFamily: "Syne", fontWeight: 600 }}>{selectedProyectoObj.nombre}</span></>
                 : <span style={{ fontSize: 13, color: "#888", fontFamily: "Syne", fontWeight: 600 }}>Todos los proyectos</span>
               }
               <span style={{ fontSize: 10, color: "#555", marginLeft: 2 }}>▾</span>
@@ -392,20 +392,20 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
             {showProyectoMenu && (
               <div style={{
                 position: "absolute", top: "calc(100% + 6px)", left: 0,
-                background: "#FAF7F3", border: "1px solid #D4C9BC", borderRadius: 12,
+                background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 12,
                 padding: 6, zIndex: 100, minWidth: 200, boxShadow: "0 8px 32px #00000088",
               }}>
                 <button onClick={() => { setSelectedProyecto("todos"); setShowProyectoMenu(false); }}
                   style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
-                    background: selectedProyecto === "todos" ? "#E0D8CE" : "transparent",
-                    border: "none", color: selectedProyecto === "todos" ? "#c8922a" : "#888",
+                    background: selectedProyecto === "todos" ? "#E5D4B8" : "transparent",
+                    border: "none", color: selectedProyecto === "todos" ? "#C8893A" : "#888",
                     fontSize: 13, fontFamily: "Syne", fontWeight: 600 }}>
                   ○ Todos los proyectos
                 </button>
                 {proyectos.filter(p => p.estado !== "finalizado").map(p => (
                   <button key={p.id} onClick={() => { setSelectedProyecto(p.id); setShowProyectoMenu(false); }}
                     style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
-                      background: selectedProyecto === p.id ? "#E0D8CE" : "transparent",
+                      background: selectedProyecto === p.id ? "#E5D4B8" : "transparent",
                       border: "none", color: selectedProyecto === p.id ? p.color : "#888",
                       fontSize: 13, fontFamily: "Syne", fontWeight: 600,
                       display: "flex", alignItems: "center", gap: 8 }}>
@@ -419,8 +419,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
         </div>
 
         <button onClick={() => setShowAdd(true)} style={{
-          background: "#c8922a18", border: "1px solid #c8922a",
-          color: "#c8922a", padding: "10px 20px", borderRadius: 12,
+          background: "#C8893A18", border: "1px solid #C8893A",
+          color: "#C8893A", padding: "10px 20px", borderRadius: 12,
           fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
         }}>
           + Nueva tarea
@@ -435,19 +435,19 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <button onClick={() => setWeekOffset(w => w - 1)} style={{
-                background: "#FAF7F3", border: "1px solid #D4C9BC", color: "#666",
+                background: "#EFE4D2", border: "1px solid #E5D4B8", color: "#666",
                 width: 32, height: 32, borderRadius: 8, fontSize: 16,
               }}>‹</button>
               <span style={{ fontSize: 13, color: "#888", fontFamily: "DM Mono", textTransform: "capitalize", minWidth: 160, textAlign: "center" }}>
                 {monthLabel}
               </span>
               <button onClick={() => setWeekOffset(w => w + 1)} style={{
-                background: "#FAF7F3", border: "1px solid #D4C9BC", color: "#666",
+                background: "#EFE4D2", border: "1px solid #E5D4B8", color: "#666",
                 width: 32, height: 32, borderRadius: 8, fontSize: 16,
               }}>›</button>
               {weekOffset !== 0 && (
                 <button onClick={() => setWeekOffset(0)} style={{
-                  background: "transparent", border: "1px solid #D4C9BC", color: "#555",
+                  background: "transparent", border: "1px solid #E5D4B8", color: "#555",
                   padding: "4px 12px", borderRadius: 8, fontSize: 11, fontFamily: "Syne", fontWeight: 600,
                 }}>Hoy</button>
               )}
@@ -463,7 +463,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 const dayCommitted = dayTasks.filter(t => t.estado === "pendiente" || t.estado === "en_progreso").reduce((a, t) => a + t.tiempo_estimado / 60, 0);
                 const dayTotal = dayWorked + dayCommitted;
                 const dayPct = Math.min(100, (dayTotal / dailyCap) * 100);
-                const barColor = dayPct >= 90 ? "#b05a5a" : dayPct >= 70 ? "#c8922a" : "#7c9e6e";
+                const barColor = dayPct >= 90 ? "#B87C5A" : dayPct >= 70 ? "#C8893A" : "#5C6B4A";
 
                 const isDragTarget = dragOverDate === date && draggedTaskId !== null;
                 return (
@@ -478,29 +478,29 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                     }}
                     style={{
                       padding: "6px 4px", borderRadius: 12,
-                      background: isDragTarget ? "#c8922a08" : "transparent",
-                      border: isDragTarget ? "1px solid #c8922a44" : "1px solid transparent",
+                      background: isDragTarget ? "#C8893A08" : "transparent",
+                      border: isDragTarget ? "1px solid #C8893A44" : "1px solid transparent",
                       transition: "background 0.15s, border-color 0.15s",
                     }}
                   >
                     <div style={{
                       textAlign: "center", marginBottom: 10, padding: "8px 4px",
                       borderRadius: 10,
-                      background: isToday ? "#c8922a18" : "transparent",
-                      border: isToday ? "1px solid #c8922a33" : "1px solid transparent",
+                      background: isToday ? "#C8893A18" : "transparent",
+                      border: isToday ? "1px solid #C8893A33" : "1px solid transparent",
                     }}>
                       <p style={{ fontSize: 11, fontFamily: "DM Mono", fontWeight: 700,
-                        color: isToday ? "#c8922a" : "#666",
+                        color: isToday ? "#C8893A" : "#666",
                         textTransform: "uppercase", letterSpacing: "0.08em" }}>
                         {label.split(" ")[0]}
                       </p>
                       <p style={{ fontSize: 20, fontFamily: "'DM Serif Display', serif",
-                        color: isToday ? "#c8922a" : "#888", lineHeight: 1.2 }}>
+                        color: isToday ? "#C8893A" : "#888", lineHeight: 1.2 }}>
                         {label.split(" ")[1]}
                       </p>
                       {dayTasks.length > 0 && (
                         <div style={{ marginTop: 6, padding: "0 4px" }}>
-                          <div style={{ height: 3, background: "#F5F1EC", borderRadius: 2, overflow: "hidden" }}>
+                          <div style={{ height: 3, background: "#F4ECDF", borderRadius: 2, overflow: "hidden" }}>
                             <div style={{ height: "100%", width: dayPct + "%", background: barColor, borderRadius: 2, transition: "width 0.4s ease" }} />
                           </div>
                           <p style={{ fontSize: 9, fontFamily: "DM Mono", color: barColor, marginTop: 3, opacity: 0.8 }}>
@@ -529,7 +529,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             onDragEnd={() => { setDraggedTaskId(null); setDragOverDate(null); }}
                           >
                             <div style={{
-                              background: "#FAF7F3", border: "1px solid " + (isDone ? "#F5F1EC" : "#E0D8CE"),
+                              background: "#EFE4D2", border: "1px solid " + (isDone ? "#F4ECDF" : "#E5D4B8"),
                               borderRadius: 10, padding: "10px 12px",
                               opacity: isDone ? 0.5 : 1,
                               cursor: isDone ? "default" : "grab",
@@ -538,7 +538,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 4 }}>
                                 <p style={{
                                   fontSize: 12, fontWeight: 600, lineHeight: 1.3,
-                                  color: isDone ? "#aaa" : "#1a1510",
+                                  color: isDone ? "#aaa" : "#2A2520",
                                   textDecoration: isDone ? "line-through" : "none",
                                   marginBottom: 4, flex: 1,
                                 }}>{task.titulo}</p>
@@ -553,13 +553,13 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                                 {proj && <span style={{ fontSize: 9, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
                                 <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>{minsToH(task.tiempo_estimado)}</span>
-                                {isDone && <span style={{ fontSize: 9, color: "#7c9e6e", fontFamily: "DM Mono" }}>✓</span>}
+                                {isDone && <span style={{ fontSize: 9, color: "#5C6B4A", fontFamily: "DM Mono" }}>✓</span>}
                               </div>
                             </div>
                             {isMovingThis && (
                               <div style={{
                                 position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
-                                background: "#F5F1EC", border: "1px solid #D4C9BC", borderRadius: 10,
+                                background: "#F4ECDF", border: "1px solid #E5D4B8", borderRadius: 10,
                                 padding: 6, zIndex: 100, boxShadow: "0 8px 24px #00000088",
                               }}>
                                 <p style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", padding: "4px 6px 6px" }}>Mover a</p>
@@ -570,11 +570,11 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                     fontSize: 11, fontFamily: "Syne", fontWeight: 600,
                                     display: "flex", justifyContent: "space-between",
                                   }}
-                                  onMouseEnter={e => (e.currentTarget.style.background = "#D4C9BC")}
+                                  onMouseEnter={e => (e.currentTarget.style.background = "#E5D4B8")}
                                   onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                                   >
                                     <span>{d.label}</span>
-                                    {d.isToday && <span style={{ fontSize: 9, color: "#c8922a" }}>hoy</span>}
+                                    {d.isToday && <span style={{ fontSize: 9, color: "#C8893A" }}>hoy</span>}
                                   </button>
                                 ))}
                               </div>
@@ -584,7 +584,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                       })}
 
                       {isQuickAdd ? (
-                        <div style={{ background: "#FAF7F3", border: "1px solid #C8BAA8", borderRadius: 10, padding: 10 }}>
+                        <div style={{ background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 10, padding: 10 }}>
                           <input
                             autoFocus
                             placeholder="Nombre de la tarea"
@@ -595,7 +595,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               fontSize: 12, fontFamily: "Syne", outline: "none", marginBottom: 8 }}
                           />
                           <select value={quickProyecto} onChange={e => setQuickProyecto(e.target.value)}
-                            style={{ width: "100%", background: "#F5F1EC", border: "1px solid #D4C9BC",
+                            style={{ width: "100%", background: "#F4ECDF", border: "1px solid #E5D4B8",
                               borderRadius: 6, padding: "4px 8px", color: "#888", fontSize: 11,
                               fontFamily: "Syne", outline: "none", marginBottom: 8 }}>
                             <option value="">Sin proyecto</option>
@@ -605,12 +605,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                           </select>
                           <div style={{ display: "flex", gap: 6 }}>
                             <button onClick={() => quickAddTask(date)} disabled={saving} style={{
-                              flex: 1, background: "#c8922a22", border: "1px solid #c8922a66",
-                              color: "#c8922a", borderRadius: 6, padding: "4px 0",
+                              flex: 1, background: "#C8893A22", border: "1px solid #C8893A66",
+                              color: "#C8893A", borderRadius: 6, padding: "4px 0",
                               fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                             }}>Agregar</button>
                             <button onClick={() => { setQuickAddDay(null); setQuickTitulo(""); }} style={{
-                              background: "transparent", border: "1px solid #D4C9BC", color: "#555",
+                              background: "transparent", border: "1px solid #E5D4B8", color: "#555",
                               borderRadius: 6, padding: "4px 8px", fontSize: 11,
                             }}>✕</button>
                           </div>
@@ -619,12 +619,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                         <button onClick={() => { setQuickAddDay(date); setQuickTitulo(""); setQuickProyecto(""); }}
                           style={{
                             width: "100%", background: "transparent",
-                            border: "1px dashed #E0D8CE", borderRadius: 10,
+                            border: "1px dashed #E5D4B8", borderRadius: 10,
                             color: "#333", padding: "8px 0", fontSize: 18,
                             transition: "all 0.15s",
                           }}
-                          onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#C8BAA8"; (e.target as HTMLElement).style.color = "#555"; }}
-                          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#E0D8CE"; (e.target as HTMLElement).style.color = "#333"; }}
+                          onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#E5D4B8"; (e.target as HTMLElement).style.color = "#555"; }}
+                          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#E5D4B8"; (e.target as HTMLElement).style.color = "#333"; }}
                         >+</button>
                       )}
                     </div>
@@ -650,13 +650,13 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 {/* Contador mejorado — visible */}
                 <span style={{
                   fontSize: 10, color: "#888", fontFamily: "DM Mono",
-                  background: "#F5F1EC", padding: "1px 7px", borderRadius: 20, marginLeft: 2,
+                  background: "#F4ECDF", padding: "1px 7px", borderRadius: 20, marginLeft: 2,
                 }}>{col.length}</span>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {col.length === 0 && (
-                  <div style={{ border: "1px dashed #E0D8CE", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
+                  <div style={{ border: "1px dashed #E5D4B8", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
                     <p style={{ fontSize: 12, color: "#555", fontFamily: "DM Mono" }}>Sin tareas</p>
                   </div>
                 )}
@@ -671,8 +671,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
 
                   return (
                     <div key={task.id} className="task-card" style={{
-                      background: "#FAF7F3",
-                      border: "1px solid " + (isTracking ? accentColor + "66" : isEditing ? "#C8BAA8" : "#E0D8CE"),
+                      background: "#EFE4D2",
+                      border: "1px solid " + (isTracking ? accentColor + "66" : isEditing ? "#E5D4B8" : "#E5D4B8"),
                       borderRadius: 14, padding: "14px 16px",
                       transition: "border-color 0.2s",
                     }}>
@@ -684,30 +684,30 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             value={editForm.titulo}
                             onChange={e => setEditForm({ ...editForm, titulo: e.target.value })}
                             autoFocus
-                            style={{ background: "#FFFFFF", border: "1px solid #C8BAA8", borderRadius: 8,
+                            style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 8,
                               padding: "8px 10px", color: "#fff", fontSize: 13, fontFamily: "Syne",
                               outline: "none", width: "100%" }}
                           />
                           <select value={editForm.proyecto_id}
                             onChange={e => setEditForm({ ...editForm, proyecto_id: e.target.value })}
-                            style={{ background: "#FFFFFF", border: "1px solid #C8BAA8", borderRadius: 8,
-                              padding: "7px 10px", color: "#2a2018", fontSize: 12, fontFamily: "Syne", outline: "none" }}>
+                            style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 8,
+                              padding: "7px 10px", color: "#2A2520", fontSize: 12, fontFamily: "Syne", outline: "none" }}>
                             <option value="">Sin proyecto</option>
                             {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                           </select>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                             <select value={editForm.prioridad}
                               onChange={e => setEditForm({ ...editForm, prioridad: e.target.value })}
-                              style={{ background: "#FFFFFF", border: "1px solid #C8BAA8", borderRadius: 8,
-                                padding: "7px 10px", color: "#2a2018", fontSize: 12, fontFamily: "Syne", outline: "none" }}>
+                              style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 8,
+                                padding: "7px 10px", color: "#2A2520", fontSize: 12, fontFamily: "Syne", outline: "none" }}>
                               <option value="alta">Alta</option>
                               <option value="media">Media</option>
                               <option value="baja">Baja</option>
                             </select>
                             <input type="date" value={editForm.fecha}
                               onChange={e => setEditForm({ ...editForm, fecha: e.target.value })}
-                              style={{ background: "#FFFFFF", border: "1px solid #C8BAA8", borderRadius: 8,
-                                padding: "7px 10px", color: "#2a2018", fontSize: 12, outline: "none", colorScheme: "light" }} />
+                              style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 8,
+                                padding: "7px 10px", color: "#2A2520", fontSize: 12, outline: "none", colorScheme: "light" }} />
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                             <div>
@@ -716,7 +716,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                   <input type="number" min={0} value={editForm.tiempo_estimado_h}
                                     onChange={e => setEditForm({ ...editForm, tiempo_estimado_h: Math.max(0, Number(e.target.value)) })}
-                                    style={{ width: 44, background: "#D4C9BC", border: "1px solid #444", borderRadius: 6,
+                                    style={{ width: 44, background: "#E5D4B8", border: "1px solid #444", borderRadius: 6,
                                       color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
                                   <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>h</span>
                                 </div>
@@ -724,7 +724,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                   <input type="number" min={0} max={59} value={editForm.tiempo_estimado_m}
                                     onChange={e => setEditForm({ ...editForm, tiempo_estimado_m: Math.max(0, Math.min(59, Number(e.target.value))) })}
-                                    style={{ width: 44, background: "#D4C9BC", border: "1px solid #444", borderRadius: 6,
+                                    style={{ width: 44, background: "#E5D4B8", border: "1px solid #444", borderRadius: 6,
                                       color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
                                   <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>min</span>
                                 </div>
@@ -736,7 +736,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                   <input type="number" min={0} value={editForm.tiempo_real_h}
                                     onChange={e => setEditForm({ ...editForm, tiempo_real_h: Math.max(0, Number(e.target.value)) })}
-                                    style={{ width: 44, background: "#D4C9BC", border: "1px solid #444", borderRadius: 6,
+                                    style={{ width: 44, background: "#E5D4B8", border: "1px solid #444", borderRadius: 6,
                                       color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
                                   <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>h</span>
                                 </div>
@@ -744,7 +744,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                   <input type="number" min={0} max={59} value={editForm.tiempo_real_m}
                                     onChange={e => setEditForm({ ...editForm, tiempo_real_m: Math.max(0, Math.min(59, Number(e.target.value))) })}
-                                    style={{ width: 44, background: "#D4C9BC", border: "1px solid #444", borderRadius: 6,
+                                    style={{ width: 44, background: "#E5D4B8", border: "1px solid #444", borderRadius: 6,
                                       color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
                                   <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>min</span>
                                 </div>
@@ -760,7 +760,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               {saving ? "Guardando..." : "Guardar"}
                             </button>
                             <button onClick={() => { setEditingTask(null); setEditForm(null); }} style={{
-                              background: "transparent", border: "1px solid #D4C9BC",
+                              background: "transparent", border: "1px solid #E5D4B8",
                               color: "#555", padding: "6px 12px", borderRadius: 8,
                               fontSize: 12, fontFamily: "Syne", fontWeight: 600,
                             }}>
@@ -771,7 +771,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                       ) : (
                         <>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 8 }}>
-                            <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#aaa" : "#1a1510",
+                            <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#aaa" : "#2A2520",
                               textDecoration: key === "completada" ? "line-through" : "none", lineHeight: 1.4, flex: 1 }}>
                               {task.titulo}
                             </p>
@@ -789,17 +789,17 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                           </div>
 
                           {confirmDeleteTask === task.id && (
-                            <div style={{ background: "#b05a5a12", border: "1px solid #b05a5a33",
+                            <div style={{ background: "#B87C5A12", border: "1px solid #B87C5A33",
                               borderRadius: 8, padding: "10px 12px", marginBottom: 10,
                               display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-                              <span style={{ fontSize: 11, color: "#b05a5a" }}>¿Eliminar esta tarea?</span>
+                              <span style={{ fontSize: 11, color: "#B87C5A" }}>¿Eliminar esta tarea?</span>
                               <div style={{ display: "flex", gap: 6 }}>
                                 <button onClick={() => setConfirmDeleteTask(null)} style={{
                                   background: "transparent", border: "1px solid #333", color: "#666",
                                   padding: "3px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Syne",
                                 }}>No</button>
                                 <button onClick={() => deleteTask(task.id)} style={{
-                                  background: "#b05a5a22", border: "1px solid #b05a5a", color: "#b05a5a",
+                                  background: "#B87C5A22", border: "1px solid #B87C5A", color: "#B87C5A",
                                   padding: "3px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                                 }}>Sí</button>
                               </div>
@@ -822,8 +822,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 onClick={() => startTimer(task)}
                                 disabled={otherTimerActive}
                                 style={{
-                                  background: isTracking ? accentColor + "22" : "#F5F1EC",
-                                  border: "1px solid " + (isTracking ? accentColor : "#D4C9BC"),
+                                  background: isTracking ? accentColor + "22" : "#F4ECDF",
+                                  border: "1px solid " + (isTracking ? accentColor : "#E5D4B8"),
                                   color: isTracking ? accentColor : otherTimerActive ? "#333" : "#666",
                                   padding: "4px 10px", borderRadius: 7,
                                   fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
@@ -839,7 +839,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
 
                             <div style={{ position: "relative" }}>
                               <button onClick={() => setMovingTask(isMoving ? null : task.id)} style={{
-                                background: "#F5F1EC", border: "1px solid #D4C9BC",
+                                background: "#F4ECDF", border: "1px solid #E5D4B8",
                                 color: "#666", padding: "4px 10px", borderRadius: 7,
                                 fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                               }}>
@@ -848,7 +848,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               {isMoving && (
                                 <div style={{
                                   position: "absolute", bottom: "calc(100% + 4px)", left: 0,
-                                  background: "#FAF7F3", border: "1px solid #D4C9BC", borderRadius: 10,
+                                  background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 10,
                                   padding: 6, zIndex: 50, minWidth: 160, boxShadow: "0 8px 24px #00000088",
                                 }}>
                                   {ESTADOS.filter(e => e.key !== key).map(e => (
@@ -885,11 +885,11 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
           zIndex: 200,
         }}>
           <div onClick={e => e.stopPropagation()} className="fade-up" style={{
-            background: "#FAF7F3", border: "1px solid #D4C9BC", borderRadius: 20,
+            background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 20,
             padding: "28px 32px", width: "100%", maxWidth: 520,
             maxHeight: "calc(100vh - 80px)", overflowY: "auto", margin: "auto",
           }}>
-            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 16, color: "#1a1510" }}>
+            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 16, color: "#2A2520" }}>
               Nueva tarea
             </h3>
 
@@ -897,8 +897,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
               {(["una", "masiva"] as const).map(tab => (
                 <button key={tab} onClick={() => setModalTab(tab)} style={{
                   flex: 1, padding: "8px 0", borderRadius: 8, border: "none",
-                  background: modalTab === tab ? "#E0D8CE" : "transparent",
-                  color: modalTab === tab ? "#c8922a" : "#555",
+                  background: modalTab === tab ? "#E5D4B8" : "transparent",
+                  color: modalTab === tab ? "#C8893A" : "#555",
                   fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 700,
                 }}>
                   {tab === "una" ? "Una tarea" : "Carga masiva"}
@@ -947,8 +947,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 20 }}>
                   <button onClick={addTarea} disabled={saving || !newTarea.titulo} style={{
-                    background: saving || !newTarea.titulo ? "#D4C9BC" : "#c8922a",
-                    border: "none", color: saving || !newTarea.titulo ? "#555" : "#1a1510",
+                    background: saving || !newTarea.titulo ? "#E5D4B8" : "#C8893A",
+                    border: "none", color: saving || !newTarea.titulo ? "#555" : "#2A2520",
                     padding: "12px 24px", borderRadius: 10,
                     fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
                     cursor: saving || !newTarea.titulo ? "not-allowed" : "pointer",
@@ -986,8 +986,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 20 }}>
                   <button onClick={addBulkTareas} disabled={saving || bulkLines === 0} style={{
-                    background: saving || bulkLines === 0 ? "#D4C9BC" : "#c8922a",
-                    border: "none", color: saving || bulkLines === 0 ? "#555" : "#1a1510",
+                    background: saving || bulkLines === 0 ? "#E5D4B8" : "#C8893A",
+                    border: "none", color: saving || bulkLines === 0 ? "#555" : "#2A2520",
                     padding: "12px 24px", borderRadius: 10,
                     fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
                     cursor: saving || bulkLines === 0 ? "not-allowed" : "pointer",

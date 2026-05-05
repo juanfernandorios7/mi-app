@@ -229,22 +229,22 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {proyectos.filter(p => p.estado === "finalizado").length > 0 && (
             <button onClick={() => setShowArchivados(v => !v)} style={{
-              background: showArchivados ? "#D4C9BC" : "transparent",
-              border: "1px solid #D4C9BC", color: showArchivados ? "#aaa" : "#666",
+              background: showArchivados ? "#E5D4B8" : "transparent",
+              border: "1px solid #E5D4B8", color: showArchivados ? "#aaa" : "#666",
               padding: "8px 16px", borderRadius: 10,
               fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 600,
             }}>
               {showArchivados ? "Ocultar archivados" : `Archivados (${proyectos.filter(p => p.estado === "finalizado").length})`}
             </button>
           )}
-          <button onClick={() => setShowAddProject(!showAddProject)} style={btnStyle("#c8922a")}>
+          <button onClick={() => setShowAddProject(!showAddProject)} style={btnStyle("#C8893A")}>
             {showAddProject ? "Cancelar" : "+ Nuevo proyecto"}
           </button>
         </div>
       </div>
 
       {showAddProject && (
-        <div className="fade-up" style={{ background: "#FAF7F3", border: "1px solid #D4C9BC", borderRadius: 16, padding: 20, marginBottom: 20 }}>
+        <div className="fade-up" style={{ background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 16, padding: 20, marginBottom: 20 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
             <input placeholder="Nombre proyecto" value={newProject.nombre}
               onChange={e => setNewProject({ ...newProject, nombre: e.target.value })} style={inputStyle} />
@@ -283,7 +283,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
               </div>
             </div>
           )}
-          <button onClick={addProject} disabled={saving} style={btnStyle("#c8922a")}>
+          <button onClick={addProject} disabled={saving} style={btnStyle("#C8893A")}>
             {saving ? "Guardando..." : "Agregar proyecto"}
           </button>
         </div>
@@ -296,7 +296,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
             <span style={{ fontSize: 11, color: "#666", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
               Archivados
             </span>
-            <div style={{ flex: 1, height: 1, background: "#F5F1EC" }} />
+            <div style={{ flex: 1, height: 1, background: "#F4ECDF" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {proyectos.filter(p => p.estado === "finalizado").map(p => {
@@ -306,7 +306,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
               const dias = getDiasActivo(p);
               return (
                 <div key={p.id} style={{
-                  background: "#0d0d0d", border: "1px solid #F5F1EC",
+                  background: "#0d0d0d", border: "1px solid #F4ECDF",
                   borderRadius: 16, padding: "18px 24px", opacity: 0.7,
                   display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12,
                 }}>
@@ -337,7 +337,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
         const grupo = proyectos.filter(p => p.tipo === tipo && p.estado !== "finalizado");
         if (grupo.length === 0) return null;
         const labels: Record<string, string> = { cliente: "Clientes", propio: "Propios", proposito: "Propósito" };
-        const colors: Record<string, string> = { cliente: "#c8922a", propio: "#7c9e6e", proposito: "#7b9ec8" };
+        const colors: Record<string, string> = { cliente: "#C8893A", propio: "#5C6B4A", proposito: "#4A4158" };
         return (
           <div key={tipo} style={{ marginBottom: 32 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -345,7 +345,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
               <span style={{ fontSize: 11, color: colors[tipo], letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
                 {labels[tipo]}
               </span>
-              <div style={{ flex: 1, height: 1, background: "#F5F1EC" }} />
+              <div style={{ flex: 1, height: 1, background: "#F4ECDF" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {grupo.map(p => {
@@ -366,8 +366,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
           return (
             <div key={p.id} style={{
-              background: "#FAF7F3",
-              border: "1px solid " + (isExpanded ? p.color + "44" : "#E0D8CE"),
+              background: "#EFE4D2",
+              border: "1px solid " + (isExpanded ? p.color + "44" : "#E5D4B8"),
               borderRadius: 18, overflow: "hidden",
               transition: "border-color 0.2s",
             }}>
@@ -380,7 +380,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
                     <div>
-                      <h3 style={{ fontSize: 17, fontWeight: 700, color: "#1a1510" }}>{p.nombre}</h3>
+                      <h3 style={{ fontSize: 17, fontWeight: 700, color: "#2A2520" }}>{p.nombre}</h3>
                       <p style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono", marginTop: 2 }}>
                         {projTasks.length} tareas
                       </p>
@@ -390,9 +390,9 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                     {alerta && (
                       <span style={{
                         fontSize: 11, fontWeight: 700,
-                        color: alerta.nivel === "danger" ? "#b05a5a" : "#c8922a",
-                        background: alerta.nivel === "danger" ? "#b05a5a18" : "#c8922a18",
-                        border: `1px solid ${alerta.nivel === "danger" ? "#b05a5a44" : "#c8922a44"}`,
+                        color: alerta.nivel === "danger" ? "#B87C5A" : "#C8893A",
+                        background: alerta.nivel === "danger" ? "#B87C5A18" : "#C8893A18",
+                        border: `1px solid ${alerta.nivel === "danger" ? "#B87C5A44" : "#C8893A44"}`,
                         padding: "3px 10px", borderRadius: 20,
                       }}>
                         ⚠ {alerta.msg}
@@ -411,7 +411,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                     <button
                       onClick={e => { e.stopPropagation(); editingProject === p.id ? (setEditingProject(null), setEditForm(null)) : startEdit(p); }}
                       style={{
-                        background: "transparent", border: "1px solid #D4C9BC",
+                        background: "transparent", border: "1px solid #E5D4B8",
                         color: "#666", padding: "4px 10px", borderRadius: 8,
                         fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                       }}
@@ -423,8 +423,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                       <button
                         onClick={e => { e.stopPropagation(); setClosingProject(closingProject === p.id ? null : p.id); setClosingFecha(today()); }}
                         style={{
-                          background: "#7c9e6e18", border: "1px solid #7c9e6e44",
-                          color: "#7c9e6e", padding: "4px 10px", borderRadius: 8,
+                          background: "#5C6B4A18", border: "1px solid #5C6B4A44",
+                          color: "#5C6B4A", padding: "4px 10px", borderRadius: 8,
                           fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                         }}
                         title="Cerrar proyecto"
@@ -447,7 +447,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                   <MetricBox label="Horas"       value={horasProyecto + "h"}      color="#777" />
                   <MetricBox label="Tarifa/h"    value={fmtCOP(ratePerH)}         color={r.color} />
                   {diasActivo !== null
-                    ? <MetricBox label={p.fecha_fin ? "Duración" : "Días abierto"} value={diasActivo + "d"} color={alerta ? (alerta.nivel === "danger" ? "#b05a5a" : "#c8922a") : "#777"} />
+                    ? <MetricBox label={p.fecha_fin ? "Duración" : "Días abierto"} value={diasActivo + "d"} color={alerta ? (alerta.nivel === "danger" ? "#B87C5A" : "#C8893A") : "#777"} />
                     : <MetricBox label="Completadas" value={`${doneProjTasks}/${projTasks.length}`} color="#777" />
                   }
                 </div>
@@ -455,7 +455,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                 {/* Panel editar proyecto — incluye botón Eliminar */}
                 {editingProject === p.id && editForm && (
                   <div onClick={e => e.stopPropagation()} style={{
-                    marginTop: 14, background: "#FFFFFF", border: "1px solid #D4C9BC",
+                    marginTop: 14, background: "#FFFFFF", border: "1px solid #E5D4B8",
                     borderRadius: 12, padding: "16px 18px",
                   }}>
                     <p style={{ fontSize: 11, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "DM Mono", marginBottom: 14 }}>Editar proyecto</p>
@@ -500,7 +500,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                           padding: "6px 14px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 600,
                         }}>Cancelar</button>
                         <button onClick={() => saveEdit(p.id)} disabled={saving} style={{
-                          background: "#c8922a22", border: "1px solid #c8922a", color: "#c8922a",
+                          background: "#C8893A22", border: "1px solid #C8893A", color: "#C8893A",
                           padding: "6px 16px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
                         }}>
                           {saving ? "Guardando..." : "Guardar cambios"}
@@ -513,7 +513,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                           if (confirm(`¿Eliminar "${p.nombre}" y todas sus tareas?`)) deleteProject(p.id);
                         }}
                         style={{
-                          background: "#b05a5a12", border: "1px solid #b05a5a44", color: "#b05a5a",
+                          background: "#B87C5A12", border: "1px solid #B87C5A44", color: "#B87C5A",
                           padding: "6px 14px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
                         }}
                       >
@@ -526,12 +526,12 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                 {/* Panel cerrar proyecto */}
                 {closingProject === p.id && (
                   <div onClick={e => e.stopPropagation()} style={{
-                    marginTop: 14, background: "#7c9e6e12", border: "1px solid #7c9e6e44",
+                    marginTop: 14, background: "#5C6B4A12", border: "1px solid #5C6B4A44",
                     borderRadius: 10, padding: "14px 16px",
                     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
                   }}>
                     <div>
-                      <p style={{ fontSize: 13, color: "#7c9e6e", fontWeight: 700, marginBottom: 4 }}>Cerrar "{p.nombre}"</p>
+                      <p style={{ fontSize: 13, color: "#5C6B4A", fontWeight: 700, marginBottom: 4 }}>Cerrar "{p.nombre}"</p>
                       <p style={{ fontSize: 11, color: "#666" }}>¿Cuál fue la fecha de entrega?</p>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -546,7 +546,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                         padding: "6px 12px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 600,
                       }}>Cancelar</button>
                       <button onClick={() => closeProject(p.id)} disabled={saving} style={{
-                        background: "#7c9e6e22", border: "1px solid #7c9e6e", color: "#7c9e6e",
+                        background: "#5C6B4A22", border: "1px solid #5C6B4A", color: "#5C6B4A",
                         padding: "6px 14px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
                       }}>
                         {saving ? "Guardando..." : "Confirmar cierre"}
@@ -557,7 +557,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
                 {/* Barra de progreso — basada en tiempo estimado real */}
                 <div style={{ marginTop: 14 }}>
-                  <div style={{ height: 3, background: "#F5F1EC", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: 3, background: "#F4ECDF", borderRadius: 2, overflow: "hidden" }}>
                     <div style={{ height: "100%", width: pct + "%", background: p.color, borderRadius: 2, transition: "width 0.6s ease" }} />
                   </div>
                   {estimadoTotalH > 0 && (
@@ -570,7 +570,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
               {/* Tareas expandibles */}
               {isExpanded && (
-                <div style={{ borderTop: "1px solid #E0D8CE", padding: "20px 28px" }}>
+                <div style={{ borderTop: "1px solid #E5D4B8", padding: "20px 28px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                     <p style={{ fontSize: 11, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                       Tareas del proyecto
@@ -618,22 +618,22 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                       return (
                         <div key={task.id} style={{
                           background: "#FFFFFF",
-                          border: "1px solid " + (isTracking ? p.color + "55" : "#F5F1EC"),
+                          border: "1px solid " + (isTracking ? p.color + "55" : "#F4ECDF"),
                           borderRadius: 12, padding: "12px 16px",
                           display: "flex", alignItems: "center", gap: 12,
                           opacity: isDone ? 0.45 : 1, transition: "all 0.2s",
                         }}>
                           <button onClick={() => toggleDone(task)} style={{
                             width: 18, height: 18, borderRadius: "50%",
-                            border: "2px solid " + (isDone ? "#7c9e6e" : "#333"),
-                            background: isDone ? "#7c9e6e" : "transparent",
+                            border: "2px solid " + (isDone ? "#5C6B4A" : "#333"),
+                            background: isDone ? "#5C6B4A" : "transparent",
                             flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
                           }}>
                             {isDone && <span style={{ fontSize: 9, color: "#fff" }}>✓</span>}
                           </button>
 
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: isDone ? "#aaa" : "#1a1510", textDecoration: isDone ? "line-through" : "none" }}>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: isDone ? "#aaa" : "#2A2520", textDecoration: isDone ? "line-through" : "none" }}>
                               {task.titulo}
                             </p>
                             <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap", alignItems: "center" }}>
@@ -646,7 +646,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                                       <input
                                         type="number" min={0} max={23} value={editTimeH}
                                         onChange={e => setEditTimeH(Math.max(0, Number(e.target.value)))}
-                                        style={{ width: 52, background: "#D4C9BC", border: "1px solid #444", borderRadius: 7,
+                                        style={{ width: 52, background: "#E5D4B8", border: "1px solid #444", borderRadius: 7,
                                           color: "#ffffff", fontSize: 16, fontFamily: "DM Mono", outline: "none",
                                           textAlign: "center", padding: "6px 4px" }}
                                         autoFocus
@@ -659,7 +659,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                                         type="number" min={0} max={59} value={editTimeM}
                                         onChange={e => setEditTimeM(Math.max(0, Math.min(59, Number(e.target.value))))}
                                         onKeyDown={e => e.key === "Enter" && saveEditTime(task, p)}
-                                        style={{ width: 52, background: "#D4C9BC", border: "1px solid #444", borderRadius: 7,
+                                        style={{ width: 52, background: "#E5D4B8", border: "1px solid #444", borderRadius: 7,
                                           color: "#ffffff", fontSize: 16, fontFamily: "DM Mono", outline: "none",
                                           textAlign: "center", padding: "6px 4px" }}
                                       />
@@ -672,7 +672,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                                     padding: "4px 10px", borderRadius: 7,
                                   }}>Guardar</button>
                                   <button onClick={() => setEditingTime(null)} style={{
-                                    background: "transparent", border: "1px solid #D4C9BC", color: "#555",
+                                    background: "transparent", border: "1px solid #E5D4B8", color: "#555",
                                     fontSize: 11, padding: "4px 8px", borderRadius: 7,
                                   }}>✕</button>
                                 </div>
@@ -682,7 +682,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                                   style={{ display: "inline-flex", alignItems: "center", gap: 4,
                                     fontSize: 11, color: task.tiempo_real > 0 ? "#888" : "#555",
                                     fontFamily: "DM Mono",
-                                    background: "#F5F1EC", border: "1px solid #D4C9BC",
+                                    background: "#F4ECDF", border: "1px solid #E5D4B8",
                                     padding: "2px 8px", borderRadius: 6 }}
                                   title="Click para editar tiempo real"
                                 >
@@ -705,8 +705,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                               onClick={() => startTimer(task, p)}
                               disabled={otherTimerActive}
                               style={{
-                                background: isTracking ? p.color + "22" : "#F5F1EC",
-                                border: "1px solid " + (isTracking ? p.color : "#D4C9BC"),
+                                background: isTracking ? p.color + "22" : "#F4ECDF",
+                                border: "1px solid " + (isTracking ? p.color : "#E5D4B8"),
                                 color: isTracking ? p.color : otherTimerActive ? "#333" : "#555",
                                 padding: "5px 12px", borderRadius: 8,
                                 fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",

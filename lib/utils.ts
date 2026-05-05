@@ -23,11 +23,11 @@ export function getRentabilidad(project: Proyecto) {
   const cobrado = project.valor_total || project.valor_mensual || 0;
   const rate = cobrado / hrs;
   if (project.currency === "COP") {
-    if (rate >= 200000) return { label: "Excelente", color: "#7c9e6e", score: 3 };
-    if (rate >= 120000) return { label: "Bien",      color: "#c8922a", score: 2 };
-    return { label: "Revisar", color: "#b05a5a", score: 1 };
+    if (rate >= 200000) return { label: "Excelente", color: "#5C6B4A", score: 3 };
+    if (rate >= 120000) return { label: "Bien",      color: "#C8893A", score: 2 };
+    return { label: "Revisar", color: "#B87C5A", score: 1 };
   }
-  return { label: "OK", color: "#c8922a", score: 2 };
+  return { label: "OK", color: "#C8893A", score: 2 };
 }
 
 export function getDiasActivo(project: Proyecto): number | null {
@@ -47,12 +47,12 @@ export function getAlertaDuracion(project: Proyecto): { nivel: "ok" | "warning" 
 }
 
 export function getCapacityStatus(pct: number) {
-  if (pct >= 90) return { label: "Es hora de delegar",        color: "#b05a5a", pulse: true  };
-  if (pct >= 70) return { label: "Cuida tu energía",          color: "#c8922a", pulse: false };
-  return             { label: "Tienes espacio — úsalo bien", color: "#7c9e6e", pulse: false };
+  if (pct >= 90) return { label: "Es hora de delegar",        color: "#B87C5A", pulse: true  };
+  if (pct >= 70) return { label: "Cuida tu energía",          color: "#C8893A", pulse: false };
+  return             { label: "Tienes espacio — úsalo bien", color: "#5C6B4A", pulse: false };
 }
 
-export const ACCENT_COLORS = ["#c8922a", "#7c9e6e", "#6e8eb0", "#a06e9e", "#b05a5a"];
+export const ACCENT_COLORS = ["#C8893A", "#5C6B4A", "#4A4158", "#B87C5A", "#8A7060"];
 
 export const btnStyle = (color: string): React.CSSProperties => ({
   background: color + "18",
@@ -68,10 +68,10 @@ export const btnStyle = (color: string): React.CSSProperties => ({
 
 export const inputStyle: React.CSSProperties = {
   background: "#FFFFFF",
-  border: "1px solid #D4C9BC",
+  border: "1px solid #E5D4B8",
   borderRadius: 10,
   padding: "10px 14px",
-  color: "#1a1510",
+  color: "#2A2520",
   fontSize: 13,
   fontFamily: "'Syne', sans-serif",
   outline: "none",

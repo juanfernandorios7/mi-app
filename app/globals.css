@@ -1,29 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
 
 :root {
-  --gold:    #c8922a;
-  --green:   #7c9e6e;
-  --blue:    #6e8eb0;
-  --red:     #b05a5a;
-  --purple:  #a06e9e;
+  /* Paleta Navva — Amanecer */
+  --ambar:    #C8893A;
+  --musgo:    #5C6B4A;
+  --grafito:  #4A4158;
+  --terracota:#B87C5A;
 
-  --gold-bg:     #c8922a12;
-  --gold-border: #c8922a33;
-  --green-bg:    #7c9e6e12;
-  --green-border:#7c9e6e33;
-  --red-bg:      #b05a5a12;
-  --red-border:  #b05a5a33;
+  --ambar-bg:     #C8893A12;
+  --ambar-border: #C8893A33;
+  --musgo-bg:     #5C6B4A12;
+  --musgo-border: #5C6B4A33;
+  --terracota-bg: #B87C5A12;
+  --terracota-border: #B87C5A33;
 
-  --s0: #1a1510;
+  /* Superficies */
+  --lino:  #F4ECDF;
+  --crema: #EFE4D2;
+  --arena: #E5D4B8;
+  --ambar-soft: #E0B677;
+
+  --s0: #2A2520;
   --s1: #FFFFFF;
-  --s2: #FAF7F3;
-  --s3: #FAF7F3;
-  --s4: #F5F1EC;
-  --s5: #E0D8CE;
-  --s6: #D4C9BC;
-  --s7: #C8BAA8;
+  --s2: #EFE4D2;
+  --s3: #EFE4D2;
+  --s4: #F4ECDF;
+  --s5: #E5D4B8;
+  --s6: #D4C4A0;
+  --s7: #C8B890;
 
-  --text-primary:   #1a1510;
+  --text-primary:   #2A2520;
   --text-secondary: #888;
   --text-tertiary:  #666;
   --text-muted:     #555;
@@ -41,8 +47,8 @@
 
 html,
 body {
-  background: #F0EBE3;
-  color: #1a1510;
+  background: #F4ECDF;
+  color: #2A2520;
   font-family: 'Syne', sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -59,10 +65,10 @@ a {
   width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAF7F3;
+  background: #EFE4D2;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c8922a;
+  background: #C8893A;
   border-radius: 2px;
 }
 
@@ -93,10 +99,10 @@ input,
 select,
 textarea {
   background: #FFFFFF;
-  border: 1px solid #D4C9BC;
+  border: 1px solid #E5D4B8;
   border-radius: 10px;
   padding: 10px 14px;
-  color: #1a1510;
+  color: #2A2520;
   font-size: 13px;
   font-family: 'Syne', sans-serif;
   outline: none;
@@ -107,7 +113,7 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: #c8922a55;
+  border-color: #C8893A55;
 }
 
 button {
@@ -129,12 +135,12 @@ button {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: var(--red-bg);
-  border: 1px solid var(--red-border);
+  background: var(--terracota-bg);
+  border: 1px solid var(--terracota-border);
   border-radius: 12px;
   padding: 12px 18px;
   z-index: 1000;
-  color: var(--red);
+  color: var(--terracota);
   font-size: 13px;
   font-family: 'Syne', sans-serif;
   animation: fadeUp 0.3s ease;
