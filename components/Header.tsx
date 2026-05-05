@@ -24,7 +24,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
 
   return (
     <header style={{
-      borderBottom: "2px solid #c8922a",
+      borderBottom: "1px solid #1e1e1e",
       padding: "0 28px",
       display: "flex",
       alignItems: "center",
@@ -47,13 +47,6 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
           color: "#e8e0d0",
         }}>
           Juanfer OS
-        </span>
-        <span style={{
-          background: "#b05a5a", color: "#fff",
-          fontSize: 11, fontFamily: "'Syne', sans-serif", fontWeight: 700,
-          padding: "3px 10px", borderRadius: 20,
-        }}>
-          esto es una prueba
         </span>
       </div>
 
