@@ -538,7 +538,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 4 }}>
                                 <p style={{
                                   fontSize: 12, fontWeight: 600, lineHeight: 1.3,
-                                  color: isDone ? "#555" : "#ddd",
+                                  color: isDone ? "#aaa" : "#1a1510",
                                   textDecoration: isDone ? "line-through" : "none",
                                   marginBottom: 4, flex: 1,
                                 }}>{task.titulo}</p>
@@ -771,7 +771,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                       ) : (
                         <>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 8 }}>
-                            <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#555" : "#ddd",
+                            <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#aaa" : "#1a1510",
                               textDecoration: key === "completada" ? "line-through" : "none", lineHeight: 1.4, flex: 1 }}>
                               {task.titulo}
                             </p>

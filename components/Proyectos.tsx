@@ -633,7 +633,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                           </button>
 
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ fontSize: 13, fontWeight: 600, color: isDone ? "#555" : "#ddd", textDecoration: isDone ? "line-through" : "none" }}>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: isDone ? "#aaa" : "#1a1510", textDecoration: isDone ? "line-through" : "none" }}>
                               {task.titulo}
                             </p>
                             <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap", alignItems: "center" }}>
