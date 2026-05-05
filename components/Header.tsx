@@ -24,7 +24,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
 
   return (
     <header style={{
-      borderBottom: "1px solid #1e1e1e",
+      borderBottom: "1px solid #2d2926",
       padding: "0 28px",
       display: "flex",
       alignItems: "center",
@@ -32,7 +32,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
       height: 60,
       position: "sticky",
       top: 0,
-      background: "#0a0a0a",
+      background: "#141210",
       zIndex: 50,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -44,7 +44,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
           fontFamily: "'DM Serif Display', serif",
           fontSize: 20,
           letterSpacing: "-0.5px",
-          color: "#e8e0d0",
+          color: "#f0ebe3",
         }}>
           Navva
         </span>
@@ -56,8 +56,8 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
             key={key}
             onClick={() => onViewChange(key)}
             style={{
-              background: view === key ? "#1a1a1a" : "transparent",
-              border: view === key ? "1px solid #2a2a2a" : "1px solid transparent",
+              background: view === key ? "#252019" : "transparent",
+              border: view === key ? "1px solid #3a3530" : "1px solid transparent",
               color: view === key ? "#c8922a" : "#aaa",
               padding: "6px 14px",
               borderRadius: 8,
@@ -79,7 +79,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
         <button
           onClick={onSignOut}
           style={{
-            background: "transparent", border: "1px solid #3a3a3a", color: "#999",
+            background: "transparent", border: "1px solid #4a443e", color: "#999",
             padding: "5px 12px", borderRadius: 8, fontSize: 12,
             fontFamily: "'Syne', sans-serif", fontWeight: 600,
           }}

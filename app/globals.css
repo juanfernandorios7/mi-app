@@ -14,16 +14,16 @@
   --red-bg:      #b05a5a12;
   --red-border:  #b05a5a33;
 
-  --s0: #0a0a0a;
-  --s1: #0f0f0f;
-  --s2: #111;
-  --s3: #141414;
-  --s4: #1a1a1a;
-  --s5: #1e1e1e;
-  --s6: #2a2a2a;
-  --s7: #3a3a3a;
+  --s0: #141210;
+  --s1: #1c1917;
+  --s2: #1a1714;
+  --s3: #1e1b18;
+  --s4: #252019;
+  --s5: #2d2926;
+  --s6: #3a3530;
+  --s7: #4a443e;
 
-  --text-primary:   #e8e0d0;
+  --text-primary:   #f0ebe3;
   --text-secondary: #888;
   --text-tertiary:  #666;
   --text-muted:     #555;
@@ -41,8 +41,8 @@
 
 html,
 body {
-  background: #0a0a0a;
-  color: #e8e0d0;
+  background: #141210;
+  color: #f0ebe3;
   font-family: 'Syne', sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -59,7 +59,7 @@ a {
   width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #111;
+  background: #1a1714;
 }
 ::-webkit-scrollbar-thumb {
   background: #c8922a;
@@ -92,11 +92,11 @@ a {
 input,
 select,
 textarea {
-  background: #0f0f0f;
-  border: 1px solid #2a2a2a;
+  background: #1c1917;
+  border: 1px solid #3a3530;
   border-radius: 10px;
   padding: 10px 14px;
-  color: #e8e0d0;
+  color: #f0ebe3;
   font-size: 13px;
   font-family: 'Syne', sans-serif;
   outline: none;

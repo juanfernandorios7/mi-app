@@ -159,8 +159,8 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
   };
 
   const field: React.CSSProperties = {
-    background: "#111", border: "1px solid #2a2a2a", borderRadius: 12,
-    padding: "14px 16px", color: "#e8e0d0", fontSize: 14,
+    background: "#1a1714", border: "1px solid #3a3530", borderRadius: 12,
+    padding: "14px 16px", color: "#f0ebe3", fontSize: 14,
     fontFamily: "'Syne', sans-serif", outline: "none", width: "100%",
   };
 
@@ -185,12 +185,12 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
 
       {/* ── Métricas ── */}
       <div style={{
-        background: "#111", border: "1px solid #1e1e1e",
+        background: "#1a1714", border: "1px solid #2d2926",
         borderRadius: 16, padding: "20px 24px", marginBottom: 24,
       }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
           <div>
-            <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#e8e0d0" }}>
+            <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#f0ebe3" }}>
               {horasMes.toFixed(1)}h
             </span>
             <span style={{ fontSize: 13, color: "#666", fontFamily: "'DM Mono', monospace", marginLeft: 10 }}>
@@ -205,7 +205,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
           </span>
         </div>
 
-        <div style={{ height: 5, background: "#1a1a1a", borderRadius: 4, marginBottom: 14, overflow: "hidden" }}>
+        <div style={{ height: 5, background: "#252019", borderRadius: 4, marginBottom: 14, overflow: "hidden" }}>
           <div style={{
             height: "100%", width: Math.min(100, metaPct) + "%",
             background: metaPct >= 100 ? "#7c9e6e" : ACCENT,
@@ -232,7 +232,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
       {cursos.length === 0 ? (
         <div style={{
           textAlign: "center", padding: "56px 0",
-          border: "1px dashed #1e1e1e", borderRadius: 16,
+          border: "1px dashed #2d2926", borderRadius: 16,
         }}>
           <p style={{ fontSize: 14, color: "#666", fontFamily: "'DM Mono', monospace" }}>No hay cursos todavía</p>
           <p style={{ fontSize: 12, color: "#555", fontFamily: "'DM Mono', monospace", marginTop: 4 }}>
@@ -252,7 +252,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
 
             return (
               <div key={curso.id} style={{
-                background: "#111", border: "1px solid #1e1e1e",
+                background: "#1a1714", border: "1px solid #2d2926",
                 borderRadius: 16, overflow: "hidden",
               }}>
                 <div style={{ height: 3, background: curso.color }} />
@@ -270,14 +270,14 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                           transition: "transform 0.2s",
                           transform: isExpanded ? "rotate(90deg)" : "none",
                         }}>›</span>
-                        <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#e8e0d0" }}>
+                        <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#f0ebe3" }}>
                           {curso.nombre}
                         </h3>
                         <span style={{
                           fontSize: 10, fontFamily: "'DM Mono', monospace", fontWeight: 700,
                           color: curso.estado === "completado" ? "#7c9e6e" : curso.estado === "pausado" ? "#666" : curso.color,
-                          background: curso.estado === "completado" ? "#7c9e6e18" : curso.estado === "pausado" ? "#1a1a1a" : curso.color + "18",
-                          border: "1px solid " + (curso.estado === "completado" ? "#7c9e6e44" : curso.estado === "pausado" ? "#2a2a2a" : curso.color + "44"),
+                          background: curso.estado === "completado" ? "#7c9e6e18" : curso.estado === "pausado" ? "#252019" : curso.color + "18",
+                          border: "1px solid " + (curso.estado === "completado" ? "#7c9e6e44" : curso.estado === "pausado" ? "#3a3530" : curso.color + "44"),
                           padding: "2px 8px", borderRadius: 6,
                           textTransform: "uppercase", letterSpacing: "0.08em",
                         }}>
@@ -306,7 +306,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
 
                   {cursoSesiones.length > 0 && (
                     <div style={{ paddingLeft: 23, marginTop: 10 }}>
-                      <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{ height: 3, background: "#252019", borderRadius: 2, overflow: "hidden" }}>
                         <div style={{
                           height: "100%", width: pct + "%",
                           background: pct >= 100 ? "#7c9e6e" : curso.color,
@@ -344,7 +344,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
 
                 {/* ── Sesiones expandidas ── */}
                 {isExpanded && (
-                  <div style={{ borderTop: "1px solid #1a1a1a", padding: "12px 20px 16px" }}>
+                  <div style={{ borderTop: "1px solid #252019", padding: "12px 20px 16px" }}>
 
                     {cursoSesiones.length === 0 ? (
                       <p style={{ fontSize: 12, color: "#555", fontFamily: "'DM Mono', monospace", padding: "6px 0 12px" }}>
@@ -399,8 +399,8 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                                   onClick={() => startTimer(sesion)}
                                   disabled={otherTimerActive}
                                   style={{
-                                    background: isTracking ? curso.color + "22" : "#1a1a1a",
-                                    border: "1px solid " + (isTracking ? curso.color : "#2a2a2a"),
+                                    background: isTracking ? curso.color + "22" : "#252019",
+                                    border: "1px solid " + (isTracking ? curso.color : "#3a3530"),
                                     color: isTracking ? curso.color : otherTimerActive ? "#333" : "#666",
                                     padding: "4px 10px", borderRadius: 7,
                                     fontSize: 11, fontFamily: "'Syne', sans-serif", fontWeight: 700,
@@ -451,7 +451,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
 
                     {addingSesionFor === curso.id ? (
                       <div style={{
-                        background: "#0f0f0f", border: "1px solid #2a2a2a",
+                        background: "#1c1917", border: "1px solid #3a3530",
                         borderRadius: 12, padding: 16, marginTop: 4,
                       }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -465,8 +465,8 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                               if (e.key === "Escape") { setAddingSesionFor(null); setNewSesion({ ...EMPTY_SESION }); }
                             }}
                             style={{
-                              background: "#111", border: "1px solid #2a2a2a", borderRadius: 8,
-                              padding: "10px 14px", color: "#e8e0d0", fontSize: 13,
+                              background: "#1a1714", border: "1px solid #3a3530", borderRadius: 8,
+                              padding: "10px 14px", color: "#f0ebe3", fontSize: 13,
                               fontFamily: "'Syne', sans-serif", outline: "none",
                             }}
                           />
@@ -475,7 +475,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                               type="date" value={newSesion.fecha}
                               onChange={e => setNewSesion({ ...newSesion, fecha: e.target.value })}
                               style={{
-                                background: "#111", border: "1px solid #2a2a2a", borderRadius: 8,
+                                background: "#1a1714", border: "1px solid #3a3530", borderRadius: 8,
                                 padding: "10px 14px", color: "#888", fontSize: 13,
                                 outline: "none", colorScheme: "dark",
                               }}
@@ -488,7 +488,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                                 type="number" min="0.5" step="0.5" value={newSesion.tiempo_estimado}
                                 onChange={e => setNewSesion({ ...newSesion, tiempo_estimado: Number(e.target.value) })}
                                 style={{
-                                  background: "#111", border: "1px solid #2a2a2a", borderRadius: 8,
+                                  background: "#1a1714", border: "1px solid #3a3530", borderRadius: 8,
                                   padding: "10px 14px", color: "#888", fontSize: 13,
                                   fontFamily: "'DM Mono', monospace", outline: "none", width: "100%",
                                 }}
@@ -500,8 +500,8 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                               onClick={() => addSesion(curso.id)}
                               disabled={saving || !newSesion.titulo.trim()}
                               style={{
-                                background: !newSesion.titulo.trim() ? "#1a1a1a" : curso.color + "22",
-                                border: "1px solid " + (!newSesion.titulo.trim() ? "#2a2a2a" : curso.color + "66"),
+                                background: !newSesion.titulo.trim() ? "#252019" : curso.color + "22",
+                                border: "1px solid " + (!newSesion.titulo.trim() ? "#3a3530" : curso.color + "66"),
                                 color: !newSesion.titulo.trim() ? "#555" : curso.color,
                                 padding: "8px 18px", borderRadius: 8,
                                 fontSize: 12, fontFamily: "'Syne', sans-serif", fontWeight: 700,
@@ -513,7 +513,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                             <button
                               onClick={() => { setAddingSesionFor(null); setNewSesion({ ...EMPTY_SESION }); }}
                               style={{
-                                background: "transparent", border: "1px solid #2a2a2a", color: "#555",
+                                background: "transparent", border: "1px solid #3a3530", color: "#555",
                                 padding: "8px 14px", borderRadius: 8, fontSize: 12,
                                 fontFamily: "'Syne', sans-serif",
                               }}
@@ -528,13 +528,13 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                         onClick={() => { setAddingSesionFor(curso.id); setNewSesion({ ...EMPTY_SESION }); }}
                         style={{
                           width: "100%", background: "transparent",
-                          border: "1px dashed #2a2a2a", borderRadius: 10,
+                          border: "1px dashed #3a3530", borderRadius: 10,
                           color: "#555", padding: "8px 0",
                           fontSize: 12, fontFamily: "'Syne', sans-serif", fontWeight: 600,
                           marginTop: 4,
                         }}
-                        onMouseEnter={e => { (e.currentTarget).style.borderColor = "#3a3a3a"; (e.currentTarget).style.color = "#777"; }}
-                        onMouseLeave={e => { (e.currentTarget).style.borderColor = "#2a2a2a"; (e.currentTarget).style.color = "#555"; }}
+                        onMouseEnter={e => { (e.currentTarget).style.borderColor = "#4a443e"; (e.currentTarget).style.color = "#777"; }}
+                        onMouseLeave={e => { (e.currentTarget).style.borderColor = "#3a3530"; (e.currentTarget).style.color = "#555"; }}
                       >
                         + Nueva sesión
                       </button>
@@ -562,11 +562,11 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
             onClick={e => e.stopPropagation()}
             className="fade-up"
             style={{
-              background: "#111", border: "1px solid #2a2a2a", borderRadius: 20,
+              background: "#1a1714", border: "1px solid #3a3530", borderRadius: 20,
               padding: "28px 32px", width: "100%", maxWidth: 480,
             }}
           >
-            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 20, color: "#e8e0d0" }}>
+            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 20, color: "#f0ebe3" }}>
               Nuevo curso
             </h3>
 
@@ -629,9 +629,9 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                 onClick={addCurso}
                 disabled={saving || !newCurso.nombre.trim()}
                 style={{
-                  background: saving || !newCurso.nombre.trim() ? "#2a2a2a" : ACCENT,
+                  background: saving || !newCurso.nombre.trim() ? "#3a3530" : ACCENT,
                   border: "none",
-                  color: saving || !newCurso.nombre.trim() ? "#555" : "#0a0a0a",
+                  color: saving || !newCurso.nombre.trim() ? "#555" : "#141210",
                   padding: "12px 24px", borderRadius: 10,
                   fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
                   cursor: saving || !newCurso.nombre.trim() ? "not-allowed" : "pointer",

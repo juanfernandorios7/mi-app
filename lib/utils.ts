@@ -67,11 +67,11 @@ export const btnStyle = (color: string): React.CSSProperties => ({
 });
 
 export const inputStyle: React.CSSProperties = {
-  background: "#0f0f0f",
-  border: "1px solid #2a2a2a",
+  background: "#1c1917",
+  border: "1px solid #3a3530",
   borderRadius: 10,
   padding: "10px 14px",
-  color: "#e8e0d0",
+  color: "#f0ebe3",
   fontSize: 13,
   fontFamily: "'Syne', sans-serif",
   outline: "none",

@@ -300,8 +300,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
   const bulkLines = bulkText.split("\n").filter(l => l.trim().length > 0).length;
 
   const field: React.CSSProperties = {
-    background: "#111", border: "1px solid #2a2a2a", borderRadius: 12,
-    padding: "14px 16px", color: "#e8e0d0", fontSize: 14,
+    background: "#1a1714", border: "1px solid #3a3530", borderRadius: 12,
+    padding: "14px 16px", color: "#f0ebe3", fontSize: 14,
     fontFamily: "'Syne', sans-serif", outline: "none", width: "100%",
   };
 
@@ -334,7 +334,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
               onClick={rolloverToday}
               disabled={rolloverSaving}
               style={{
-                background: "#c8922a", border: "none", color: "#0a0a0a",
+                background: "#c8922a", border: "none", color: "#141210",
                 padding: "8px 18px", borderRadius: 9,
                 fontSize: 12, fontFamily: "Syne", fontWeight: 700,
               }}
@@ -360,11 +360,11 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28 }}>Tareas</h2>
 
-          <div style={{ display: "flex", gap: 2, background: "#111", border: "1px solid #1e1e1e", borderRadius: 10, padding: 3 }}>
+          <div style={{ display: "flex", gap: 2, background: "#1a1714", border: "1px solid #2d2926", borderRadius: 10, padding: 3 }}>
             {(["kanban", "semana"] as const).map(v => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: "5px 14px", borderRadius: 8, border: "none",
-                background: view === v ? "#1e1e1e" : "transparent",
+                background: view === v ? "#2d2926" : "transparent",
                 color: view === v ? "#c8922a" : "#555",
                 fontSize: 12, fontFamily: "Syne", fontWeight: 700,
               }}>
@@ -378,7 +378,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
               onClick={() => setShowProyectoMenu(v => !v)}
               style={{
                 display: "flex", alignItems: "center", gap: 8,
-                background: "#111", border: "1px solid #2a2a2a", borderRadius: 10,
+                background: "#1a1714", border: "1px solid #3a3530", borderRadius: 10,
                 padding: "7px 14px",
               }}
             >
@@ -392,12 +392,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
             {showProyectoMenu && (
               <div style={{
                 position: "absolute", top: "calc(100% + 6px)", left: 0,
-                background: "#141414", border: "1px solid #2a2a2a", borderRadius: 12,
+                background: "#1e1b18", border: "1px solid #3a3530", borderRadius: 12,
                 padding: 6, zIndex: 100, minWidth: 200, boxShadow: "0 8px 32px #00000088",
               }}>
                 <button onClick={() => { setSelectedProyecto("todos"); setShowProyectoMenu(false); }}
                   style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
-                    background: selectedProyecto === "todos" ? "#1e1e1e" : "transparent",
+                    background: selectedProyecto === "todos" ? "#2d2926" : "transparent",
                     border: "none", color: selectedProyecto === "todos" ? "#c8922a" : "#888",
                     fontSize: 13, fontFamily: "Syne", fontWeight: 600 }}>
                   ○ Todos los proyectos
@@ -405,7 +405,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 {proyectos.filter(p => p.estado !== "finalizado").map(p => (
                   <button key={p.id} onClick={() => { setSelectedProyecto(p.id); setShowProyectoMenu(false); }}
                     style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
-                      background: selectedProyecto === p.id ? "#1e1e1e" : "transparent",
+                      background: selectedProyecto === p.id ? "#2d2926" : "transparent",
                       border: "none", color: selectedProyecto === p.id ? p.color : "#888",
                       fontSize: 13, fontFamily: "Syne", fontWeight: 600,
                       display: "flex", alignItems: "center", gap: 8 }}>
@@ -435,19 +435,19 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <button onClick={() => setWeekOffset(w => w - 1)} style={{
-                background: "#111", border: "1px solid #2a2a2a", color: "#666",
+                background: "#1a1714", border: "1px solid #3a3530", color: "#666",
                 width: 32, height: 32, borderRadius: 8, fontSize: 16,
               }}>‹</button>
               <span style={{ fontSize: 13, color: "#888", fontFamily: "DM Mono", textTransform: "capitalize", minWidth: 160, textAlign: "center" }}>
                 {monthLabel}
               </span>
               <button onClick={() => setWeekOffset(w => w + 1)} style={{
-                background: "#111", border: "1px solid #2a2a2a", color: "#666",
+                background: "#1a1714", border: "1px solid #3a3530", color: "#666",
                 width: 32, height: 32, borderRadius: 8, fontSize: 16,
               }}>›</button>
               {weekOffset !== 0 && (
                 <button onClick={() => setWeekOffset(0)} style={{
-                  background: "transparent", border: "1px solid #2a2a2a", color: "#555",
+                  background: "transparent", border: "1px solid #3a3530", color: "#555",
                   padding: "4px 12px", borderRadius: 8, fontSize: 11, fontFamily: "Syne", fontWeight: 600,
                 }}>Hoy</button>
               )}
@@ -500,7 +500,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                       </p>
                       {dayTasks.length > 0 && (
                         <div style={{ marginTop: 6, padding: "0 4px" }}>
-                          <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
+                          <div style={{ height: 3, background: "#252019", borderRadius: 2, overflow: "hidden" }}>
                             <div style={{ height: "100%", width: dayPct + "%", background: barColor, borderRadius: 2, transition: "width 0.4s ease" }} />
                           </div>
                           <p style={{ fontSize: 9, fontFamily: "DM Mono", color: barColor, marginTop: 3, opacity: 0.8 }}>
@@ -529,7 +529,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             onDragEnd={() => { setDraggedTaskId(null); setDragOverDate(null); }}
                           >
                             <div style={{
-                              background: "#111", border: "1px solid " + (isDone ? "#1a1a1a" : "#1e1e1e"),
+                              background: "#1a1714", border: "1px solid " + (isDone ? "#252019" : "#2d2926"),
                               borderRadius: 10, padding: "10px 12px",
                               opacity: isDone ? 0.5 : 1,
                               cursor: isDone ? "default" : "grab",
@@ -559,7 +559,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             {isMovingThis && (
                               <div style={{
                                 position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
-                                background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10,
+                                background: "#252019", border: "1px solid #3a3530", borderRadius: 10,
                                 padding: 6, zIndex: 100, boxShadow: "0 8px 24px #00000088",
                               }}>
                                 <p style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", padding: "4px 6px 6px" }}>Mover a</p>
@@ -570,7 +570,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                     fontSize: 11, fontFamily: "Syne", fontWeight: 600,
                                     display: "flex", justifyContent: "space-between",
                                   }}
-                                  onMouseEnter={e => (e.currentTarget.style.background = "#2a2a2a")}
+                                  onMouseEnter={e => (e.currentTarget.style.background = "#3a3530")}
                                   onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                                   >
                                     <span>{d.label}</span>
@@ -584,7 +584,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                       })}
 
                       {isQuickAdd ? (
-                        <div style={{ background: "#111", border: "1px solid #3a3a3a", borderRadius: 10, padding: 10 }}>
+                        <div style={{ background: "#1a1714", border: "1px solid #4a443e", borderRadius: 10, padding: 10 }}>
                           <input
                             autoFocus
                             placeholder="Nombre de la tarea"
@@ -595,7 +595,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               fontSize: 12, fontFamily: "Syne", outline: "none", marginBottom: 8 }}
                           />
                           <select value={quickProyecto} onChange={e => setQuickProyecto(e.target.value)}
-                            style={{ width: "100%", background: "#1a1a1a", border: "1px solid #2a2a2a",
+                            style={{ width: "100%", background: "#252019", border: "1px solid #3a3530",
                               borderRadius: 6, padding: "4px 8px", color: "#888", fontSize: 11,
                               fontFamily: "Syne", outline: "none", marginBottom: 8 }}>
                             <option value="">Sin proyecto</option>
@@ -610,7 +610,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                             }}>Agregar</button>
                             <button onClick={() => { setQuickAddDay(null); setQuickTitulo(""); }} style={{
-                              background: "transparent", border: "1px solid #2a2a2a", color: "#555",
+                              background: "transparent", border: "1px solid #3a3530", color: "#555",
                               borderRadius: 6, padding: "4px 8px", fontSize: 11,
                             }}>✕</button>
                           </div>
@@ -619,12 +619,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                         <button onClick={() => { setQuickAddDay(date); setQuickTitulo(""); setQuickProyecto(""); }}
                           style={{
                             width: "100%", background: "transparent",
-                            border: "1px dashed #1e1e1e", borderRadius: 10,
+                            border: "1px dashed #2d2926", borderRadius: 10,
                             color: "#333", padding: "8px 0", fontSize: 18,
                             transition: "all 0.15s",
                           }}
-                          onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#3a3a3a"; (e.target as HTMLElement).style.color = "#555"; }}
-                          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#1e1e1e"; (e.target as HTMLElement).style.color = "#333"; }}
+                          onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#4a443e"; (e.target as HTMLElement).style.color = "#555"; }}
+                          onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#2d2926"; (e.target as HTMLElement).style.color = "#333"; }}
                         >+</button>
                       )}
                     </div>
@@ -650,13 +650,13 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 {/* Contador mejorado — visible */}
                 <span style={{
                   fontSize: 10, color: "#888", fontFamily: "DM Mono",
-                  background: "#1a1a1a", padding: "1px 7px", borderRadius: 20, marginLeft: 2,
+                  background: "#252019", padding: "1px 7px", borderRadius: 20, marginLeft: 2,
                 }}>{col.length}</span>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {col.length === 0 && (
-                  <div style={{ border: "1px dashed #1e1e1e", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
+                  <div style={{ border: "1px dashed #2d2926", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
                     <p style={{ fontSize: 12, color: "#555", fontFamily: "DM Mono" }}>Sin tareas</p>
                   </div>
                 )}
@@ -671,8 +671,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
 
                   return (
                     <div key={task.id} className="task-card" style={{
-                      background: "#111",
-                      border: "1px solid " + (isTracking ? accentColor + "66" : isEditing ? "#3a3a3a" : "#1e1e1e"),
+                      background: "#1a1714",
+                      border: "1px solid " + (isTracking ? accentColor + "66" : isEditing ? "#4a443e" : "#2d2926"),
                       borderRadius: 14, padding: "14px 16px",
                       transition: "border-color 0.2s",
                     }}>
@@ -684,13 +684,13 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             value={editForm.titulo}
                             onChange={e => setEditForm({ ...editForm, titulo: e.target.value })}
                             autoFocus
-                            style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
+                            style={{ background: "#1c1917", border: "1px solid #4a443e", borderRadius: 8,
                               padding: "8px 10px", color: "#fff", fontSize: 13, fontFamily: "Syne",
                               outline: "none", width: "100%" }}
                           />
                           <select value={editForm.proyecto_id}
                             onChange={e => setEditForm({ ...editForm, proyecto_id: e.target.value })}
-                            style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
+                            style={{ background: "#1c1917", border: "1px solid #4a443e", borderRadius: 8,
                               padding: "7px 10px", color: "#ddd", fontSize: 12, fontFamily: "Syne", outline: "none" }}>
                             <option value="">Sin proyecto</option>
                             {proyectos.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
@@ -698,7 +698,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                             <select value={editForm.prioridad}
                               onChange={e => setEditForm({ ...editForm, prioridad: e.target.value })}
-                              style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
+                              style={{ background: "#1c1917", border: "1px solid #4a443e", borderRadius: 8,
                                 padding: "7px 10px", color: "#ddd", fontSize: 12, fontFamily: "Syne", outline: "none" }}>
                               <option value="alta">Alta</option>
                               <option value="media">Media</option>
@@ -706,7 +706,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             </select>
                             <input type="date" value={editForm.fecha}
                               onChange={e => setEditForm({ ...editForm, fecha: e.target.value })}
-                              style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
+                              style={{ background: "#1c1917", border: "1px solid #4a443e", borderRadius: 8,
                                 padding: "7px 10px", color: "#ddd", fontSize: 12, outline: "none", colorScheme: "dark" }} />
                           </div>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -716,7 +716,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                   <input type="number" min={0} value={editForm.tiempo_estimado_h}
                                     onChange={e => setEditForm({ ...editForm, tiempo_estimado_h: Math.max(0, Number(e.target.value)) })}
-                                    style={{ width: 44, background: "#2a2a2a", border: "1px solid #444", borderRadius: 6,
+                                    style={{ width: 44, background: "#3a3530", border: "1px solid #444", borderRadius: 6,
                                       color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
                                   <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>h</span>
                                 </div>
@@ -724,7 +724,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                   <input type="number" min={0} max={59} value={editForm.tiempo_estimado_m}
                                     onChange={e => setEditForm({ ...editForm, tiempo_estimado_m: Math.max(0, Math.min(59, Number(e.target.value))) })}
-                                    style={{ width: 44, background: "#2a2a2a", border: "1px solid #444", borderRadius: 6,
+                                    style={{ width: 44, background: "#3a3530", border: "1px solid #444", borderRadius: 6,
                                       color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
                                   <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>min</span>
                                 </div>
@@ -736,7 +736,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                   <input type="number" min={0} value={editForm.tiempo_real_h}
                                     onChange={e => setEditForm({ ...editForm, tiempo_real_h: Math.max(0, Number(e.target.value)) })}
-                                    style={{ width: 44, background: "#2a2a2a", border: "1px solid #444", borderRadius: 6,
+                                    style={{ width: 44, background: "#3a3530", border: "1px solid #444", borderRadius: 6,
                                       color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
                                   <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>h</span>
                                 </div>
@@ -744,7 +744,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
                                   <input type="number" min={0} max={59} value={editForm.tiempo_real_m}
                                     onChange={e => setEditForm({ ...editForm, tiempo_real_m: Math.max(0, Math.min(59, Number(e.target.value))) })}
-                                    style={{ width: 44, background: "#2a2a2a", border: "1px solid #444", borderRadius: 6,
+                                    style={{ width: 44, background: "#3a3530", border: "1px solid #444", borderRadius: 6,
                                       color: "#fff", fontSize: 13, fontFamily: "DM Mono", textAlign: "center", padding: "4px 0", outline: "none" }} />
                                   <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>min</span>
                                 </div>
@@ -760,7 +760,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               {saving ? "Guardando..." : "Guardar"}
                             </button>
                             <button onClick={() => { setEditingTask(null); setEditForm(null); }} style={{
-                              background: "transparent", border: "1px solid #2a2a2a",
+                              background: "transparent", border: "1px solid #3a3530",
                               color: "#555", padding: "6px 12px", borderRadius: 8,
                               fontSize: 12, fontFamily: "Syne", fontWeight: 600,
                             }}>
@@ -822,8 +822,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                 onClick={() => startTimer(task)}
                                 disabled={otherTimerActive}
                                 style={{
-                                  background: isTracking ? accentColor + "22" : "#1a1a1a",
-                                  border: "1px solid " + (isTracking ? accentColor : "#2a2a2a"),
+                                  background: isTracking ? accentColor + "22" : "#252019",
+                                  border: "1px solid " + (isTracking ? accentColor : "#3a3530"),
                                   color: isTracking ? accentColor : otherTimerActive ? "#333" : "#666",
                                   padding: "4px 10px", borderRadius: 7,
                                   fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
@@ -839,7 +839,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
 
                             <div style={{ position: "relative" }}>
                               <button onClick={() => setMovingTask(isMoving ? null : task.id)} style={{
-                                background: "#1a1a1a", border: "1px solid #2a2a2a",
+                                background: "#252019", border: "1px solid #3a3530",
                                 color: "#666", padding: "4px 10px", borderRadius: 7,
                                 fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                               }}>
@@ -848,7 +848,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               {isMoving && (
                                 <div style={{
                                   position: "absolute", bottom: "calc(100% + 4px)", left: 0,
-                                  background: "#141414", border: "1px solid #2a2a2a", borderRadius: 10,
+                                  background: "#1e1b18", border: "1px solid #3a3530", borderRadius: 10,
                                   padding: 6, zIndex: 50, minWidth: 160, boxShadow: "0 8px 24px #00000088",
                                 }}>
                                   {ESTADOS.filter(e => e.key !== key).map(e => (
@@ -885,19 +885,19 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
           zIndex: 200,
         }}>
           <div onClick={e => e.stopPropagation()} className="fade-up" style={{
-            background: "#111", border: "1px solid #2a2a2a", borderRadius: 20,
+            background: "#1a1714", border: "1px solid #3a3530", borderRadius: 20,
             padding: "28px 32px", width: "100%", maxWidth: 520,
             maxHeight: "calc(100vh - 80px)", overflowY: "auto", margin: "auto",
           }}>
-            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 16, color: "#e8e0d0" }}>
+            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, marginBottom: 16, color: "#f0ebe3" }}>
               Nueva tarea
             </h3>
 
-            <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#0f0f0f", borderRadius: 10, padding: 4 }}>
+            <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#1c1917", borderRadius: 10, padding: 4 }}>
               {(["una", "masiva"] as const).map(tab => (
                 <button key={tab} onClick={() => setModalTab(tab)} style={{
                   flex: 1, padding: "8px 0", borderRadius: 8, border: "none",
-                  background: modalTab === tab ? "#1e1e1e" : "transparent",
+                  background: modalTab === tab ? "#2d2926" : "transparent",
                   color: modalTab === tab ? "#c8922a" : "#555",
                   fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 700,
                 }}>
@@ -947,8 +947,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 20 }}>
                   <button onClick={addTarea} disabled={saving || !newTarea.titulo} style={{
-                    background: saving || !newTarea.titulo ? "#2a2a2a" : "#c8922a",
-                    border: "none", color: saving || !newTarea.titulo ? "#555" : "#0a0a0a",
+                    background: saving || !newTarea.titulo ? "#3a3530" : "#c8922a",
+                    border: "none", color: saving || !newTarea.titulo ? "#555" : "#141210",
                     padding: "12px 24px", borderRadius: 10,
                     fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
                     cursor: saving || !newTarea.titulo ? "not-allowed" : "pointer",
@@ -986,8 +986,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 20 }}>
                   <button onClick={addBulkTareas} disabled={saving || bulkLines === 0} style={{
-                    background: saving || bulkLines === 0 ? "#2a2a2a" : "#c8922a",
-                    border: "none", color: saving || bulkLines === 0 ? "#555" : "#0a0a0a",
+                    background: saving || bulkLines === 0 ? "#3a3530" : "#c8922a",
+                    border: "none", color: saving || bulkLines === 0 ? "#555" : "#141210",
                     padding: "12px 24px", borderRadius: 10,
                     fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 700,
                     cursor: saving || bulkLines === 0 ? "not-allowed" : "pointer",
