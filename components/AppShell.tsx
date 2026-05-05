@@ -69,7 +69,7 @@ export default function AppShell({ proyectos, tareas, config, cursos, sesiones }
   const capacidadHoras = config?.capacidad_total_horas ?? 40;
 
   return (
-    <div style={{ fontFamily: "'Syne', sans-serif", background: "#F4ECDF", minHeight: "100vh", color: "#2A2520" }}>
+    <div style={{ fontFamily: "'Syne', sans-serif", background: "#FAF7F1", minHeight: "100vh", color: "#2A2520" }}>
       <Header view={view} onViewChange={setView} onSignOut={handleSignOut} />
 
       <main style={{ padding: "28px", maxWidth: view === "tareas" ? 1280 : 960, margin: "0 auto" }}>
