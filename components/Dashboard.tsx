@@ -107,7 +107,7 @@ function ProyectoBlock({ titulo, proyectos, tareas, accentColor, descripcion }: 
   });
 
   return (
-    <div style={{ background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 20, padding: "28px 32px", marginBottom: 16 }}>
+    <div style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 20, padding: "28px 32px", marginBottom: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: accentColor, boxShadow: `0 0 8px ${accentColor}66` }} />
         <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#2A2520" }}>{titulo}</span>
@@ -273,7 +273,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
       )}
 
       {/* ── Esta semana ── */}
-      <div style={{ background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 20, padding: "24px 28px", marginBottom: 16 }}>
+      <div style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 20, padding: "24px 28px", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
           <p style={{ fontSize: 11, color: "#aaa", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
             Esta semana
@@ -350,7 +350,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
       </div>
 
       {/* ── Bloque rendimiento ── */}
-      <div style={{ background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 20, padding: "28px 32px", marginBottom: 20 }}>
+      <div style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 20, padding: "28px 32px", marginBottom: 20 }}>
 
         {/* Header + toggle período */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>

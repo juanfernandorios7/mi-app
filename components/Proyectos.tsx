@@ -244,7 +244,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       </div>
 
       {showAddProject && (
-        <div className="fade-up" style={{ background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 16, padding: 20, marginBottom: 20 }}>
+        <div className="fade-up" style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 16, padding: 20, marginBottom: 20 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
             <input placeholder="Nombre proyecto" value={newProject.nombre}
               onChange={e => setNewProject({ ...newProject, nombre: e.target.value })} style={inputStyle} />
@@ -366,7 +366,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
           return (
             <div key={p.id} style={{
-              background: "#EFE4D2",
+              background: "#FFFFFF",
               border: "1px solid " + (isExpanded ? p.color + "44" : "#E5D4B8"),
               borderRadius: 18, overflow: "hidden",
               transition: "border-color 0.2s",

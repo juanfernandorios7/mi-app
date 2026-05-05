@@ -300,7 +300,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
   const bulkLines = bulkText.split("\n").filter(l => l.trim().length > 0).length;
 
   const field: React.CSSProperties = {
-    background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 12,
+    background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 12,
     padding: "14px 16px", color: "#2A2520", fontSize: 14,
     fontFamily: "'Syne', sans-serif", outline: "none", width: "100%",
   };
@@ -360,7 +360,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28 }}>Tareas</h2>
 
-          <div style={{ display: "flex", gap: 2, background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 10, padding: 3 }}>
+          <div style={{ display: "flex", gap: 2, background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 10, padding: 3 }}>
             {(["kanban", "semana"] as const).map(v => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: "5px 14px", borderRadius: 8, border: "none",
@@ -378,7 +378,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
               onClick={() => setShowProyectoMenu(v => !v)}
               style={{
                 display: "flex", alignItems: "center", gap: 8,
-                background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 10,
+                background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 10,
                 padding: "7px 14px",
               }}
             >
@@ -392,7 +392,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
             {showProyectoMenu && (
               <div style={{
                 position: "absolute", top: "calc(100% + 6px)", left: 0,
-                background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 12,
+                background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 12,
                 padding: 6, zIndex: 100, minWidth: 200, boxShadow: "0 8px 32px #00000088",
               }}>
                 <button onClick={() => { setSelectedProyecto("todos"); setShowProyectoMenu(false); }}
@@ -435,14 +435,14 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <button onClick={() => setWeekOffset(w => w - 1)} style={{
-                background: "#EFE4D2", border: "1px solid #E5D4B8", color: "#666",
+                background: "#FFFFFF", border: "1px solid #E5D4B8", color: "#666",
                 width: 32, height: 32, borderRadius: 8, fontSize: 16,
               }}>‹</button>
               <span style={{ fontSize: 13, color: "#888", fontFamily: "DM Mono", textTransform: "capitalize", minWidth: 160, textAlign: "center" }}>
                 {monthLabel}
               </span>
               <button onClick={() => setWeekOffset(w => w + 1)} style={{
-                background: "#EFE4D2", border: "1px solid #E5D4B8", color: "#666",
+                background: "#FFFFFF", border: "1px solid #E5D4B8", color: "#666",
                 width: 32, height: 32, borderRadius: 8, fontSize: 16,
               }}>›</button>
               {weekOffset !== 0 && (
@@ -529,7 +529,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             onDragEnd={() => { setDraggedTaskId(null); setDragOverDate(null); }}
                           >
                             <div style={{
-                              background: "#EFE4D2", border: "1px solid " + (isDone ? "#F4ECDF" : "#E5D4B8"),
+                              background: "#FFFFFF", border: "1px solid " + (isDone ? "#F4ECDF" : "#E5D4B8"),
                               borderRadius: 10, padding: "10px 12px",
                               opacity: isDone ? 0.5 : 1,
                               cursor: isDone ? "default" : "grab",
@@ -584,7 +584,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                       })}
 
                       {isQuickAdd ? (
-                        <div style={{ background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 10, padding: 10 }}>
+                        <div style={{ background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 10, padding: 10 }}>
                           <input
                             autoFocus
                             placeholder="Nombre de la tarea"
@@ -671,7 +671,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
 
                   return (
                     <div key={task.id} className="task-card" style={{
-                      background: "#EFE4D2",
+                      background: "#FFFFFF",
                       border: "1px solid " + (isTracking ? accentColor + "66" : isEditing ? "#E5D4B8" : "#E5D4B8"),
                       borderRadius: 14, padding: "14px 16px",
                       transition: "border-color 0.2s",
@@ -848,7 +848,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               {isMoving && (
                                 <div style={{
                                   position: "absolute", bottom: "calc(100% + 4px)", left: 0,
-                                  background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 10,
+                                  background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 10,
                                   padding: 6, zIndex: 50, minWidth: 160, boxShadow: "0 8px 24px #00000088",
                                 }}>
                                   {ESTADOS.filter(e => e.key !== key).map(e => (
@@ -885,7 +885,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
           zIndex: 200,
         }}>
           <div onClick={e => e.stopPropagation()} className="fade-up" style={{
-            background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 20,
+            background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 20,
             padding: "28px 32px", width: "100%", maxWidth: 520,
             maxHeight: "calc(100vh - 80px)", overflowY: "auto", margin: "auto",
           }}>

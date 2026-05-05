@@ -159,7 +159,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
   };
 
   const field: React.CSSProperties = {
-    background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 12,
+    background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 12,
     padding: "14px 16px", color: "#2A2520", fontSize: 14,
     fontFamily: "'Syne', sans-serif", outline: "none", width: "100%",
   };
@@ -185,7 +185,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
 
       {/* ── Métricas ── */}
       <div style={{
-        background: "#EFE4D2", border: "1px solid #E5D4B8",
+        background: "#FFFFFF", border: "1px solid #E5D4B8",
         borderRadius: 16, padding: "20px 24px", marginBottom: 24,
       }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
@@ -252,7 +252,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
 
             return (
               <div key={curso.id} style={{
-                background: "#EFE4D2", border: "1px solid #E5D4B8",
+                background: "#FFFFFF", border: "1px solid #E5D4B8",
                 borderRadius: 16, overflow: "hidden",
               }}>
                 <div style={{ height: 3, background: curso.color }} />
@@ -465,7 +465,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                               if (e.key === "Escape") { setAddingSesionFor(null); setNewSesion({ ...EMPTY_SESION }); }
                             }}
                             style={{
-                              background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 8,
+                              background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 8,
                               padding: "10px 14px", color: "#2A2520", fontSize: 13,
                               fontFamily: "'Syne', sans-serif", outline: "none",
                             }}
@@ -475,7 +475,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                               type="date" value={newSesion.fecha}
                               onChange={e => setNewSesion({ ...newSesion, fecha: e.target.value })}
                               style={{
-                                background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 8,
+                                background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 8,
                                 padding: "10px 14px", color: "#888", fontSize: 13,
                                 outline: "none", colorScheme: "light",
                               }}
@@ -488,7 +488,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
                                 type="number" min="0.5" step="0.5" value={newSesion.tiempo_estimado}
                                 onChange={e => setNewSesion({ ...newSesion, tiempo_estimado: Number(e.target.value) })}
                                 style={{
-                                  background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 8,
+                                  background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 8,
                                   padding: "10px 14px", color: "#888", fontSize: 13,
                                   fontFamily: "'DM Mono', monospace", outline: "none", width: "100%",
                                 }}
@@ -562,7 +562,7 @@ export default function Formacion({ initialCursos, initialSesiones, config, onDa
             onClick={e => e.stopPropagation()}
             className="fade-up"
             style={{
-              background: "#EFE4D2", border: "1px solid #E5D4B8", borderRadius: 20,
+              background: "#FFFFFF", border: "1px solid #E5D4B8", borderRadius: 20,
               padding: "28px 32px", width: "100%", maxWidth: 480,
             }}
           >
