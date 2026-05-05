@@ -36,24 +36,24 @@ export default function LoginPage() {
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#1c1510", display: "flex",
+      minHeight: "100vh", background: "#1a1510", display: "flex",
       alignItems: "center", justifyContent: "center",
     }}>
       <div style={{
-        background: "#261d14", border: "1px solid #3d3028", borderRadius: 24,
+        background: "#FAF7F3", border: "1px solid #E0D8CE", borderRadius: 24,
         padding: "48px 40px", width: "100%", maxWidth: 400,
       }}>
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
           <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#c8922a", boxShadow: "0 0 8px #c8922a88" }} />
-          <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, letterSpacing: "-0.5px", color: "#f0ebe3" }}>
+          <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, letterSpacing: "-0.5px", color: "#1a1510" }}>
             Navva
           </span>
         </div>
 
         {sent ? (
           <div>
-            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, marginBottom: 12, color: "#f0ebe3" }}>
+            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, marginBottom: 12, color: "#1a1510" }}>
               Revisa tu correo
             </p>
             <p style={{ fontSize: 13, color: "#666", lineHeight: 1.6 }}>
@@ -62,7 +62,7 @@ export default function LoginPage() {
           </div>
         ) : (
           <form onSubmit={handleMagicLink}>
-            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, marginBottom: 8, color: "#f0ebe3" }}>
+            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, marginBottom: 8, color: "#1a1510" }}>
               Bienvenido de vuelta
             </p>
             <p style={{ fontSize: 13, color: "#888", marginBottom: 28, lineHeight: 1.6 }}>Tu negocio, tu tiempo, tu vida.</p>
@@ -75,8 +75,8 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 style={{
-                  background: "#2a2018", border: "1px solid #4e4038", borderRadius: 10,
-                  padding: "12px 16px", color: "#f0ebe3", fontSize: 14,
+                  background: "#FFFFFF", border: "1px solid #D4C9BC", borderRadius: 10,
+                  padding: "12px 16px", color: "#1a1510", fontSize: 14,
                   fontFamily: "'Syne', sans-serif", outline: "none", width: "100%",
                 }}
               />
@@ -99,9 +99,9 @@ export default function LoginPage() {
             </button>
 
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-              <div style={{ flex: 1, height: 1, background: "#3d3028" }} />
+              <div style={{ flex: 1, height: 1, background: "#E0D8CE" }} />
               <span style={{ fontSize: 11, color: "#444" }}>o</span>
-              <div style={{ flex: 1, height: 1, background: "#3d3028" }} />
+              <div style={{ flex: 1, height: 1, background: "#E0D8CE" }} />
             </div>
 
             <button
@@ -109,7 +109,7 @@ export default function LoginPage() {
               onClick={handleGoogle}
               style={{
                 width: "100%", padding: "12px", borderRadius: 10,
-                background: "#38291e", border: "1px solid #4e4038",
+                background: "#F5F1EC", border: "1px solid #D4C9BC",
                 color: "#aaa", fontSize: 14, fontFamily: "'Syne', sans-serif", fontWeight: 600,
                 cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}

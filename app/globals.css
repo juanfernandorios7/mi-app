@@ -14,16 +14,16 @@
   --red-bg:      #b05a5a12;
   --red-border:  #b05a5a33;
 
-  --s0: #1c1510;
-  --s1: #2a2018;
-  --s2: #261d14;
-  --s3: #2e2419;
-  --s4: #38291e;
-  --s5: #3d3028;
-  --s6: #4e4038;
-  --s7: #5e5048;
+  --s0: #1a1510;
+  --s1: #FFFFFF;
+  --s2: #FAF7F3;
+  --s3: #FAF7F3;
+  --s4: #F5F1EC;
+  --s5: #E0D8CE;
+  --s6: #D4C9BC;
+  --s7: #C8BAA8;
 
-  --text-primary:   #f0ebe3;
+  --text-primary:   #1a1510;
   --text-secondary: #888;
   --text-tertiary:  #666;
   --text-muted:     #555;
@@ -41,8 +41,8 @@
 
 html,
 body {
-  background: #1c1510;
-  color: #f0ebe3;
+  background: #F0EBE3;
+  color: #1a1510;
   font-family: 'Syne', sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -59,7 +59,7 @@ a {
   width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #261d14;
+  background: #FAF7F3;
 }
 ::-webkit-scrollbar-thumb {
   background: #c8922a;
@@ -92,11 +92,11 @@ a {
 input,
 select,
 textarea {
-  background: #2a2018;
-  border: 1px solid #4e4038;
+  background: #FFFFFF;
+  border: 1px solid #D4C9BC;
   border-radius: 10px;
   padding: 10px 14px;
-  color: #f0ebe3;
+  color: #1a1510;
   font-size: 13px;
   font-family: 'Syne', sans-serif;
   outline: none;
