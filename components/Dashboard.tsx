@@ -111,7 +111,7 @@ function ProyectoBlock({ titulo, proyectos, tareas, accentColor, descripcion }: 
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
         <div style={{ width: 8, height: 8, borderRadius: "50%", background: accentColor, boxShadow: `0 0 8px ${accentColor}66` }} />
         <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 18, color: "#e8e0d0" }}>{titulo}</span>
-        {descripcion && <span style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono", marginLeft: 4 }}>{descripcion}</span>}
+        {descripcion && <span style={{ fontSize: 11, color: "#888", fontFamily: "DM Mono", marginLeft: 4 }}>{descripcion}</span>}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
         <StatBox label="Horas totales"   value={totalHoras.toFixed(1) + "h"} />
@@ -122,8 +122,8 @@ function ProyectoBlock({ titulo, proyectos, tareas, accentColor, descripcion }: 
         <div style={{ marginBottom: 20 }}>
           <ResponsiveContainer width="100%" height={120}>
             <BarChart data={chartData} barSize={28}>
-              <XAxis dataKey="name" tick={{ fill: "#555", fontSize: 11, fontFamily: "Syne" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#444", fontSize: 10, fontFamily: "DM Mono" }} axisLine={false} tickLine={false}
+              <XAxis dataKey="name" tick={{ fill: "#999", fontSize: 11, fontFamily: "Syne" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#888", fontSize: 10, fontFamily: "DM Mono" }} axisLine={false} tickLine={false}
                 tickFormatter={v => "$" + (v / 1000).toFixed(0) + "k"} />
               <Tooltip contentStyle={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, fontFamily: "DM Mono", fontSize: 12 }}
                 formatter={(v) => [fmtCOP(Number(v)), "COP/hora"]} labelStyle={{ color: "#888" }} />
@@ -145,7 +145,7 @@ function ProyectoBlock({ titulo, proyectos, tareas, accentColor, descripcion }: 
                 <span style={{ fontSize: 10, color: r.color, fontWeight: 700, background: r.color + "18", padding: "2px 7px", borderRadius: 20 }}>{r.label}</span>
               </div>
               <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, color: "#ddd" }}>{p.nombre}</p>
-              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#555", marginBottom: 4 }}>{getHorasProy(p)}h invertidas</p>
+              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#999", marginBottom: 4 }}>{getHorasProy(p)}h invertidas</p>
               {cobrado > 0 && <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: p.color }}>{fmtCOP(cobrado)}</p>}
             </div>
           );
@@ -275,7 +275,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
       {/* ── Esta semana ── */}
       <div style={{ background: "#111", border: "1px solid #1e1e1e", borderRadius: 20, padding: "24px 28px", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-          <p style={{ fontSize: 11, color: "#555", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
+          <p style={{ fontSize: 11, color: "#aaa", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
             Esta semana
           </p>
           {sobreSaturada && (
@@ -293,7 +293,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
             <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#7c9e6e", lineHeight: 1 }}>
               {horasTrabajadasSemana.toFixed(1)}<span style={{ fontSize: 14, opacity: 0.6 }}>h</span>
             </p>
-            <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginTop: 6 }}>horas reales registradas</p>
+            <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", marginTop: 6 }}>horas reales registradas</p>
           </div>
 
           {/* Comprometidas */}
@@ -302,7 +302,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
             <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, color: "#c8922a", lineHeight: 1 }}>
               {horasCompromatidasSemana.toFixed(1)}<span style={{ fontSize: 14, opacity: 0.6 }}>h</span>
             </p>
-            <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginTop: 6 }}>tareas pendientes esta semana</p>
+            <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", marginTop: 6 }}>tareas pendientes esta semana</p>
           </div>
 
           {/* Disponibles */}
@@ -314,7 +314,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
               {sobreSaturada ? (horasUsadasSemana - capacidadHoras).toFixed(1) : horasDisponiblesSemana.toFixed(1)}
               <span style={{ fontSize: 14, opacity: 0.6 }}>h</span>
             </p>
-            <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginTop: 6 }}>
+            <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", marginTop: 6 }}>
               {sobreSaturada ? "por encima de tu capacidad" : `de ${capacidadHoras}h capacidad semanal`}
             </p>
           </div>
@@ -342,7 +342,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
             <span style={{ fontSize: 10, color: "#c8922a", fontFamily: "DM Mono", display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#c8922a", display: "inline-block" }} /> Comprometidas
             </span>
-            <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginLeft: "auto" }}>
+            <span style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", marginLeft: "auto" }}>
               {horasUsadasSemana.toFixed(1)}h / {capacidadHoras}h
             </span>
           </div>
@@ -355,10 +355,10 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
         {/* Header + toggle período */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div>
-            <p style={{ fontSize: 11, color: "#555", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", marginBottom: 4 }}>
+            <p style={{ fontSize: 11, color: "#aaa", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", marginBottom: 4 }}>
               Rendimiento
             </p>
-            <p style={{ fontSize: 13, color: "#444", fontFamily: "DM Mono" }}>
+            <p style={{ fontSize: 13, color: "#888", fontFamily: "DM Mono" }}>
               {horasPeriodo.toFixed(1)}h trabajadas {periodoLabels[periodo]}
             </p>
           </div>
@@ -367,7 +367,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
               <button key={p} onClick={() => setPeriodo(p)} style={{
                 padding: "6px 16px", borderRadius: 8, border: "none",
                 background: periodo === p ? "#1e1e1e" : "transparent",
-                color: periodo === p ? "#c8922a" : "#555",
+                color: periodo === p ? "#c8922a" : "#999",
                 fontSize: 12, fontFamily: "Syne", fontWeight: 700, cursor: "pointer",
                 textTransform: "capitalize",
               }}>
@@ -381,51 +381,51 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: periodo === "semana" ? 24 : 0 }}>
           {/* Horas trabajadas */}
           <div style={{ background: "#0f0f0f", border: "1px solid #1a1a1a", borderRadius: 14, padding: "18px 20px" }}>
-            <p style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Horas trabajadas</p>
+            <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Horas trabajadas</p>
             <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#e8e0d0", lineHeight: 1 }}>
-              {horasPeriodo.toFixed(1)}<span style={{ fontSize: 16, color: "#555" }}>h</span>
+              {horasPeriodo.toFixed(1)}<span style={{ fontSize: 16, color: "#777" }}>h</span>
             </p>
           </div>
 
           {/* Tareas completadas */}
           <div style={{ background: "#0f0f0f", border: "1px solid #1a1a1a", borderRadius: 14, padding: "18px 20px" }}>
-            <p style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Tareas completadas</p>
+            <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Tareas completadas</p>
             <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#e8e0d0", lineHeight: 1 }}>
               {completadasPeriodo}
-              <span style={{ fontSize: 16, color: "#555" }}>/{periodTareas.length}</span>
+              <span style={{ fontSize: 16, color: "#777" }}>/{periodTareas.length}</span>
             </p>
           </div>
 
           {/* Eficiencia */}
           <div style={{ background: "#0f0f0f", border: "1px solid #1a1a1a", borderRadius: 14, padding: "18px 20px" }}>
-            <p style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Eficiencia</p>
+            <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Eficiencia</p>
             {eficiencia !== null ? (
               <>
                 <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, lineHeight: 1,
                   color: eficiencia <= 100 ? "#7c9e6e" : "#c8922a" }}>
                   {eficiencia}<span style={{ fontSize: 16, opacity: 0.6 }}>%</span>
                 </p>
-                <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginTop: 6 }}>
+                <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", marginTop: 6 }}>
                   {eficiencia <= 100 ? "Más rápido que lo estimado" : "Más lento que lo estimado"}
                 </p>
               </>
             ) : (
-              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#333", lineHeight: 1 }}>—</p>
+              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#555", lineHeight: 1 }}>—</p>
             )}
           </div>
 
           {/* Tarifa efectiva */}
           <div style={{ background: "#0f0f0f", border: "1px solid #1a1a1a", borderRadius: 14, padding: "18px 20px" }}>
-            <p style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Tarifa efectiva</p>
+            <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Tarifa efectiva</p>
             {tarifaPeriodo !== null ? (
               <>
                 <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: "#c8922a", lineHeight: 1 }}>
                   {fmtCOP(tarifaPeriodo)}
                 </p>
-                <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", marginTop: 6 }}>por hora trabajada</p>
+                <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", marginTop: 6 }}>por hora trabajada</p>
               </>
             ) : (
-              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#333", lineHeight: 1 }}>—</p>
+              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, color: "#555", lineHeight: 1 }}>—</p>
             )}
           </div>
         </div>
@@ -433,7 +433,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
         {/* Gráfico semanal por día */}
         {periodo === "semana" && weekData.some(d => d.horas > 0) && (
           <div>
-            <p style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
+            <p style={{ fontSize: 10, color: "#999", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 14 }}>
               Horas por día
             </p>
             <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 80 }}>
@@ -442,19 +442,19 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
                 const pct = (d.horas / maxH) * 100;
                 return (
                   <div key={d.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 10, color: d.horas > 0 ? "#888" : "#333", fontFamily: "DM Mono" }}>
+                    <span style={{ fontSize: 10, color: d.horas > 0 ? "#888" : "#555", fontFamily: "DM Mono" }}>
                       {d.horas > 0 ? d.horas + "h" : ""}
                     </span>
                     <div style={{ width: "100%", background: "#1a1a1a", borderRadius: 6, height: 48, display: "flex", alignItems: "flex-end", overflow: "hidden" }}>
                       <div style={{
                         width: "100%", borderRadius: 6,
                         height: pct + "%",
-                        background: d.esHoy ? "#c8922a" : "#2a2a2a",
+                        background: d.esHoy ? "#c8922a" : "#3a3a3a",
                         transition: "height 0.4s ease",
                         minHeight: d.horas > 0 ? 4 : 0,
                       }} />
                     </div>
-                    <span style={{ fontSize: 10, color: d.esHoy ? "#c8922a" : "#444", fontFamily: "DM Mono", fontWeight: d.esHoy ? 700 : 400 }}>
+                    <span style={{ fontSize: 10, color: d.esHoy ? "#c8922a" : "#666", fontFamily: "DM Mono", fontWeight: d.esHoy ? 700 : 400 }}>
                       {d.label}
                     </span>
                   </div>
@@ -476,7 +476,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 24 }}>
           <div>
-            <p style={{ fontSize: 11, color: "#555", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
+            <p style={{ fontSize: 11, color: "#aaa", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>
               Capacidad mensual
             </p>
             <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 64, lineHeight: 1, color: capStatus.color, marginBottom: 12 }}>
@@ -491,7 +491,7 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
             <div style={{ height: 8, background: "#1a1a1a", borderRadius: 4, marginBottom: 8, overflow: "hidden" }}>
               <div style={{ height: "100%", width: capacityPct + "%", background: capStatus.color, borderRadius: 4, transition: "width 0.8s ease" }} />
             </div>
-            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#444" }}>
+            <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#999" }}>
               {allProjectHours.toFixed(1)}h registradas / {CAPACITY_HOURS * 4}h capacidad mensual
             </p>
             <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>

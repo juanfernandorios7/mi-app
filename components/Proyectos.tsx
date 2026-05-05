@@ -5,33 +5,37 @@ import { createClient } from "@/lib/supabase/client";
 import { Proyecto, Tarea } from "@/lib/types";
 import { fmtCOP, minsToH, getRentabilidad, getDiasActivo, getAlertaDuracion, today, btnStyle, inputStyle, ACCENT_COLORS } from "@/lib/utils";
 import MetricBox from "./MetricBox";
+import { TimerState } from "./AppShell";
 
 interface ProyectosProps {
   initialProyectos: Proyecto[];
   initialTareas: Tarea[];
   onDataChange: () => void;
+  timer: TimerState;
 }
 
-export default function Proyectos({ initialProyectos, initialTareas, onDataChange }: ProyectosProps) {
+export default function Proyectos({ initialProyectos, initialTareas, onDataChange, timer }: ProyectosProps) {
   const supabase = createClient();
   const [proyectos, setProyectos] = useState<Proyecto[]>(initialProyectos);
   const [tareas, setTareas] = useState<Tarea[]>(initialTareas);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const showError = (msg: string) => {
+    setErrorMsg(msg);
+    setTimeout(() => setErrorMsg(null), 4000);
+  };
 
   useEffect(() => { setProyectos(initialProyectos); }, [initialProyectos]);
   useEffect(() => { setTareas(initialTareas); }, [initialTareas]);
   const [showAddProject, setShowAddProject] = useState(false);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [addTaskForProject, setAddTaskForProject] = useState<string | null>(null);
-  const [trackingId, setTrackingId] = useState<string | null>(null);
-  const [trackingStart, setTrackingStart] = useState<number | null>(null);
-  const [elapsed, setElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
   const [showArchivados, setShowArchivados] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [closingProject, setClosingProject] = useState<string | null>(null);
   const [closingFecha, setClosingFecha] = useState(today());
   const [editingProject, setEditingProject] = useState<string | null>(null);
-  const [editingTime, setEditingTime] = useState<string | null>(null); // tarea id
+  const [editingTime, setEditingTime] = useState<string | null>(null);
   const [editTimeH, setEditTimeH] = useState(0);
   const [editTimeM, setEditTimeM] = useState(0);
   const [editForm, setEditForm] = useState<{
@@ -72,6 +76,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       setNewProject({ nombre: "", valor_total: "", currency: "COP", tipo_cobro: "unico", tipo: "cliente", fecha_inicio: today(), fecha_fin: "" });
       setShowAddProject(false);
       onDataChange();
+    } else if (error) {
+      showError("No se pudo crear el proyecto. Intenta de nuevo.");
     }
     setSaving(false);
   };
@@ -86,6 +92,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       setProyectos(ps => ps.map(p => p.id === id ? { ...p, fecha_fin: closingFecha, estado: "finalizado" } : p));
       setClosingProject(null);
       onDataChange();
+    } else {
+      showError("No se pudo cerrar el proyecto.");
     }
     setSaving(false);
   };
@@ -98,10 +106,9 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
   const saveEditTime = async (task: Tarea, proj: Proyecto) => {
     const newMins = editTimeH * 60 + editTimeM;
-    const diff = newMins - task.tiempo_real; // diferencia vs lo que tenía antes
+    const diff = newMins - task.tiempo_real;
     setTareas(ts => ts.map(t => t.id === task.id ? { ...t, tiempo_real: newMins } : t));
     await supabase.from("tareas").update({ tiempo_real: newMins }).eq("id", task.id);
-    // actualizar horas_logged del proyecto con la diferencia
     if (diff !== 0) {
       const newHours = +(proj.horas_logged + diff / 60).toFixed(2);
       setProyectos(ps => ps.map(p => p.id === proj.id ? { ...p, horas_logged: Math.max(0, newHours) } : p));
@@ -142,6 +149,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       setEditingProject(null);
       setEditForm(null);
       onDataChange();
+    } else {
+      showError("No se pudo guardar. Intenta de nuevo.");
     }
     setSaving(false);
   };
@@ -149,9 +158,11 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   const deleteProject = async (id: string) => {
     setProyectos(ps => ps.filter(p => p.id !== id));
     setTareas(ts => ts.filter(t => t.proyecto_id !== id));
-    setConfirmDelete(null);
+    setEditingProject(null);
+    setEditForm(null);
     setExpandedProject(null);
-    await supabase.from("proyectos").delete().eq("id", id);
+    const { error } = await supabase.from("proyectos").delete().eq("id", id);
+    if (error) showError("No se pudo eliminar el proyecto.");
     onDataChange();
   };
 
@@ -176,6 +187,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       setNewProjectTask({ titulo: "", tiempo_estimado: 60 });
       setAddTaskForProject(null);
       onDataChange();
+    } else if (error) {
+      showError("No se pudo agregar la tarea.");
     }
   };
 
@@ -187,8 +200,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
   }, [supabase, onDataChange]);
 
   const startTimer = useCallback(async (tarea: Tarea, proj: Proyecto) => {
-    if (trackingId === tarea.id) {
-      const mins = Math.floor(elapsed / 60);
+    if (timer.trackingId === tarea.id) {
+      const mins = Math.floor(timer.elapsed / 60);
       const newReal = tarea.tiempo_real + mins;
       setTareas(ts => ts.map(t => t.id === tarea.id ? { ...t, tiempo_real: newReal } : t));
       await supabase.from("tareas").update({ tiempo_real: newReal }).eq("id", tarea.id);
@@ -197,29 +210,27 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
       setProyectos(ps => ps.map(p => p.id === proj.id ? { ...p, horas_logged: newHours } : p));
       await supabase.from("proyectos").update({ horas_logged: newHours }).eq("id", proj.id);
 
-      setTrackingId(null);
-      setTrackingStart(null);
-      setElapsed(0);
+      timer.stopTracking();
       onDataChange();
-    } else {
-      setTrackingId(tarea.id);
-      setTrackingStart(Date.now());
-      setElapsed(0);
+    } else if (!timer.trackingId) {
+      timer.startTracking(tarea.id);
     }
-  }, [trackingId, elapsed, supabase, onDataChange]);
+  }, [timer, supabase, onDataChange]);
 
   return (
     <div className="fade-up">
+      {errorMsg && <div className="error-toast">{errorMsg}</div>}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, marginBottom: 4 }}>Proyectos</h2>
-          <p style={{ fontSize: 12, color: "#555", fontFamily: "DM Mono" }}>Click en un proyecto para ver sus tareas</p>
+          <p style={{ fontSize: 12, color: "#666", fontFamily: "DM Mono" }}>Click en un proyecto para ver sus tareas</p>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {proyectos.filter(p => p.estado === "finalizado").length > 0 && (
             <button onClick={() => setShowArchivados(v => !v)} style={{
               background: showArchivados ? "#2a2a2a" : "transparent",
-              border: "1px solid #2a2a2a", color: showArchivados ? "#aaa" : "#555",
+              border: "1px solid #2a2a2a", color: showArchivados ? "#aaa" : "#666",
               padding: "8px 16px", borderRadius: 10,
               fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 600,
             }}>
@@ -261,12 +272,12 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
           {newProject.tipo_cobro === "unico" && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
               <div>
-                <label style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha inicio</label>
+                <label style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha inicio</label>
                 <input type="date" value={newProject.fecha_inicio}
                   onChange={e => setNewProject({ ...newProject, fecha_inicio: e.target.value })} style={inputStyle} />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha entrega (opcional)</label>
+                <label style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha entrega (opcional)</label>
                 <input type="date" value={newProject.fecha_fin}
                   onChange={e => setNewProject({ ...newProject, fecha_fin: e.target.value })} style={inputStyle} />
               </div>
@@ -278,12 +289,11 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
         </div>
       )}
 
-      {/* Sección archivados */}
       {showArchivados && (
         <div style={{ marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#444" }} />
-            <span style={{ fontSize: 11, color: "#555", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
+            <span style={{ fontSize: 11, color: "#666", letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "DM Mono", fontWeight: 700 }}>
               Archivados
             </span>
             <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
@@ -304,15 +314,15 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#444" }} />
                     <div>
                       <p style={{ fontSize: 15, fontWeight: 700, color: "#666" }}>{p.nombre}</p>
-                      <p style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono", marginTop: 2 }}>
+                      <p style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", marginTop: 2 }}>
                         {p.fecha_inicio && p.fecha_fin ? `${p.fecha_inicio} → ${p.fecha_fin}` : "Sin fechas"}
                         {dias !== null ? ` · ${dias}d` : ""}
                       </p>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                    <span style={{ fontFamily: "DM Mono", fontSize: 12, color: "#555" }}>{p.horas_logged}h invertidas</span>
-                    <span style={{ fontFamily: "DM Mono", fontSize: 13, color: "#555" }}>{fmtCOP(cobrado)}</span>
+                    <span style={{ fontFamily: "DM Mono", fontSize: 12, color: "#666" }}>{p.horas_logged}h invertidas</span>
+                    <span style={{ fontFamily: "DM Mono", fontSize: 13, color: "#666" }}>{fmtCOP(cobrado)}</span>
                     <span style={{ fontFamily: "DM Mono", fontSize: 13, color: r.color }}>{fmtCOP(ratePerH)}/h</span>
                     <span style={{ fontSize: 11, color: r.color, background: r.color + "18", padding: "2px 8px", borderRadius: 20, fontWeight: 700 }}>{r.label}</span>
                   </div>
@@ -342,10 +352,13 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
           const r = getRentabilidad(p);
           const cobrado = p.valor_total || p.valor_mensual || 0;
           const projTasks = tareas.filter(t => t.proyecto_id === p.id);
-          // Calcular horas siempre desde las tareas (más confiable que horas_logged)
           const horasProyecto = +(projTasks.reduce((a, t) => a + t.tiempo_real / 60, 0)).toFixed(2);
           const ratePerH = Math.round(cobrado / (horasProyecto || 1));
-          const pct = Math.min(100, Math.round((horasProyecto / 40) * 100));
+
+          // Barra de progreso basada en tiempo estimado total de tareas (no 40h hardcodeado)
+          const estimadoTotalH = +(projTasks.reduce((a, t) => a + t.tiempo_estimado / 60, 0)).toFixed(2);
+          const pct = estimadoTotalH > 0 ? Math.min(100, Math.round((horasProyecto / estimadoTotalH) * 100)) : 0;
+
           const doneProjTasks = projTasks.filter(t => t.estado === "completada").length;
           const isExpanded = expandedProject === p.id;
           const diasActivo = getDiasActivo(p);
@@ -368,7 +381,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                     <div style={{ width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
                     <div>
                       <h3 style={{ fontSize: 17, fontWeight: 700, color: "#e8e0d0" }}>{p.nombre}</h3>
-                      <p style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", marginTop: 2 }}>
+                      <p style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono", marginTop: 2 }}>
                         {projTasks.length} tareas
                       </p>
                     </div>
@@ -386,7 +399,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                       </span>
                     )}
                     {diasActivo !== null && !alerta && (
-                      <span style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono" }}>
+                      <span style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono" }}>
                         {diasActivo}d {p.fecha_fin ? "duración" : "activo"}
                       </span>
                     )}
@@ -396,16 +409,16 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                     <span style={{ fontFamily: "DM Mono", fontSize: 13, color: p.color }}>{horasProyecto > 0 ? fmtCOP(ratePerH) + "/h" : "—"}</span>
                     {/* Botón editar */}
                     <button
-                      onClick={e => { e.stopPropagation(); editingProject === p.id ? setEditingProject(null) : startEdit(p); }}
+                      onClick={e => { e.stopPropagation(); editingProject === p.id ? (setEditingProject(null), setEditForm(null)) : startEdit(p); }}
                       style={{
                         background: "transparent", border: "1px solid #2a2a2a",
-                        color: "#555", padding: "4px 10px", borderRadius: 8,
+                        color: "#666", padding: "4px 10px", borderRadius: 8,
                         fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                       }}
                     >
                       Editar
                     </button>
-                    {/* Botón cerrar proyecto (solo pago único sin fecha_fin) */}
+                    {/* Botón cerrar proyecto */}
                     {p.tipo_cobro === "unico" && !p.fecha_fin && (
                       <button
                         onClick={e => { e.stopPropagation(); setClosingProject(closingProject === p.id ? null : p.id); setClosingFecha(today()); }}
@@ -419,20 +432,8 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                         Cerrar
                       </button>
                     )}
-                    {/* Botón eliminar */}
-                    <button
-                      onClick={e => { e.stopPropagation(); setConfirmDelete(confirmDelete === p.id ? null : p.id); }}
-                      style={{
-                        background: "transparent", border: "1px solid #2a2a2a",
-                        color: "#555", width: 28, height: 28, borderRadius: 8,
-                        fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-                      }}
-                      title="Eliminar proyecto"
-                    >
-                      ×
-                    </button>
                     <span style={{
-                      fontSize: 16, color: "#444",
+                      fontSize: 16, color: "#555",
                       transition: "transform 0.2s",
                       transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
                       display: "inline-block",
@@ -443,42 +444,21 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                 {/* Mini metrics */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginTop: 16 }}>
                   <MetricBox label="Cobrado"     value={fmtCOP(cobrado)}          color={p.color} />
-                  <MetricBox label="Horas"       value={horasProyecto + "h"}      color="#666" />
+                  <MetricBox label="Horas"       value={horasProyecto + "h"}      color="#777" />
                   <MetricBox label="Tarifa/h"    value={fmtCOP(ratePerH)}         color={r.color} />
                   {diasActivo !== null
-                    ? <MetricBox label={p.fecha_fin ? "Duración" : "Días abierto"} value={diasActivo + "d"} color={alerta ? (alerta.nivel === "danger" ? "#b05a5a" : "#c8922a") : "#666"} />
-                    : <MetricBox label="Completadas" value={`${doneProjTasks}/${projTasks.length}`} color="#666" />
+                    ? <MetricBox label={p.fecha_fin ? "Duración" : "Días abierto"} value={diasActivo + "d"} color={alerta ? (alerta.nivel === "danger" ? "#b05a5a" : "#c8922a") : "#777"} />
+                    : <MetricBox label="Completadas" value={`${doneProjTasks}/${projTasks.length}`} color="#777" />
                   }
                 </div>
 
-                {/* Confirmación eliminar */}
-                {confirmDelete === p.id && (
-                  <div onClick={e => e.stopPropagation()} style={{
-                    marginTop: 14, background: "#b05a5a18", border: "1px solid #b05a5a44",
-                    borderRadius: 10, padding: "12px 16px",
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-                  }}>
-                    <span style={{ fontSize: 13, color: "#b05a5a" }}>¿Eliminar "{p.nombre}" y todas sus tareas?</span>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => setConfirmDelete(null)} style={{
-                        background: "transparent", border: "1px solid #333", color: "#666",
-                        padding: "5px 12px", borderRadius: 7, fontSize: 12, fontFamily: "Syne", fontWeight: 600,
-                      }}>Cancelar</button>
-                      <button onClick={() => deleteProject(p.id)} style={{
-                        background: "#b05a5a22", border: "1px solid #b05a5a", color: "#b05a5a",
-                        padding: "5px 12px", borderRadius: 7, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
-                      }}>Eliminar</button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Panel editar proyecto */}
+                {/* Panel editar proyecto — incluye botón Eliminar */}
                 {editingProject === p.id && editForm && (
                   <div onClick={e => e.stopPropagation()} style={{
                     marginTop: 14, background: "#0f0f0f", border: "1px solid #2a2a2a",
                     borderRadius: 12, padding: "16px 18px",
                   }}>
-                    <p style={{ fontSize: 11, color: "#555", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "DM Mono", marginBottom: 14 }}>Editar proyecto</p>
+                    <p style={{ fontSize: 11, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "DM Mono", marginBottom: 14 }}>Editar proyecto</p>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
                       <input value={editForm.nombre} onChange={e => setEditForm({ ...editForm, nombre: e.target.value })}
                         placeholder="Nombre" style={inputStyle} />
@@ -504,25 +484,40 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                     {editForm.tipo_cobro === "unico" && (
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
                         <div>
-                          <label style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha inicio</label>
+                          <label style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha inicio</label>
                           <input type="date" value={editForm.fecha_inicio} onChange={e => setEditForm({ ...editForm, fecha_inicio: e.target.value })} style={inputStyle} />
                         </div>
                         <div>
-                          <label style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha entrega</label>
+                          <label style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono", display: "block", marginBottom: 6 }}>Fecha entrega</label>
                           <input type="date" value={editForm.fecha_fin} onChange={e => setEditForm({ ...editForm, fecha_fin: e.target.value })} style={inputStyle} />
                         </div>
                       </div>
                     )}
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <button onClick={() => setEditingProject(null)} style={{
-                        background: "transparent", border: "1px solid #333", color: "#666",
-                        padding: "6px 14px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 600,
-                      }}>Cancelar</button>
-                      <button onClick={() => saveEdit(p.id)} disabled={saving} style={{
-                        background: "#c8922a22", border: "1px solid #c8922a", color: "#c8922a",
-                        padding: "6px 16px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
-                      }}>
-                        {saving ? "Guardando..." : "Guardar cambios"}
+                    <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button onClick={() => { setEditingProject(null); setEditForm(null); }} style={{
+                          background: "transparent", border: "1px solid #333", color: "#666",
+                          padding: "6px 14px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 600,
+                        }}>Cancelar</button>
+                        <button onClick={() => saveEdit(p.id)} disabled={saving} style={{
+                          background: "#c8922a22", border: "1px solid #c8922a", color: "#c8922a",
+                          padding: "6px 16px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
+                        }}>
+                          {saving ? "Guardando..." : "Guardar cambios"}
+                        </button>
+                      </div>
+                      {/* Botón eliminar — solo accesible desde el panel de edición */}
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (confirm(`¿Eliminar "${p.nombre}" y todas sus tareas?`)) deleteProject(p.id);
+                        }}
+                        style={{
+                          background: "#b05a5a12", border: "1px solid #b05a5a44", color: "#b05a5a",
+                          padding: "6px 14px", borderRadius: 8, fontSize: 12, fontFamily: "Syne", fontWeight: 700,
+                        }}
+                      >
+                        Eliminar proyecto
                       </button>
                     </div>
                   </div>
@@ -537,7 +532,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                   }}>
                     <div>
                       <p style={{ fontSize: 13, color: "#7c9e6e", fontWeight: 700, marginBottom: 4 }}>Cerrar "{p.nombre}"</p>
-                      <p style={{ fontSize: 11, color: "#555" }}>¿Cuál fue la fecha de entrega?</p>
+                      <p style={{ fontSize: 11, color: "#666" }}>¿Cuál fue la fecha de entrega?</p>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <input
@@ -560,11 +555,16 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                   </div>
                 )}
 
-                {/* Barra de carga */}
+                {/* Barra de progreso — basada en tiempo estimado real */}
                 <div style={{ marginTop: 14 }}>
                   <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
                     <div style={{ height: "100%", width: pct + "%", background: p.color, borderRadius: 2, transition: "width 0.6s ease" }} />
                   </div>
+                  {estimadoTotalH > 0 && (
+                    <p style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono", marginTop: 4 }}>
+                      {horasProyecto}h de {estimadoTotalH}h estimadas ({pct}%)
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -572,7 +572,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
               {isExpanded && (
                 <div style={{ borderTop: "1px solid #1e1e1e", padding: "20px 28px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                    <p style={{ fontSize: 11, color: "#555", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    <p style={{ fontSize: 11, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                       Tareas del proyecto
                     </p>
                     <button
@@ -605,14 +605,15 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                   )}
 
                   {projTasks.length === 0 && !addTaskForProject && (
-                    <p style={{ fontSize: 13, color: "#444", fontFamily: "DM Mono", padding: "12px 0" }}>
+                    <p style={{ fontSize: 13, color: "#555", fontFamily: "DM Mono", padding: "12px 0" }}>
                       Sin tareas aún. Agrega la primera ↑
                     </p>
                   )}
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {projTasks.map(task => {
-                      const isTracking = trackingId === task.id;
+                      const isTracking = timer.trackingId === task.id;
+                      const otherTimerActive = timer.trackingId !== null && timer.trackingId !== task.id;
                       const isDone = task.estado === "completada";
                       return (
                         <div key={task.id} style={{
@@ -636,7 +637,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                               {task.titulo}
                             </p>
                             <div style={{ display: "flex", gap: 10, marginTop: 3, flexWrap: "wrap", alignItems: "center" }}>
-                              <span style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
+                              <span style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
 
                               {editingTime === task.id ? (
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }} onClick={e => e.stopPropagation()}>
@@ -680,7 +681,7 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
                                   onClick={e => { e.stopPropagation(); openEditTime(task); }}
                                   style={{ display: "inline-flex", alignItems: "center", gap: 4,
                                     fontSize: 11, color: task.tiempo_real > 0 ? "#888" : "#555",
-                                    fontFamily: "DM Mono", cursor: "pointer",
+                                    fontFamily: "DM Mono",
                                     background: "#1a1a1a", border: "1px solid #2a2a2a",
                                     padding: "2px 8px", borderRadius: 6 }}
                                   title="Click para editar tiempo real"
@@ -695,18 +696,24 @@ export default function Proyectos({ initialProyectos, initialTareas, onDataChang
 
                           {isTracking && (
                             <div style={{ fontFamily: "DM Mono", fontSize: 13, color: p.color, minWidth: 52 }}>
-                              {String(Math.floor(elapsed / 60)).padStart(2, "0")}:{String(elapsed % 60).padStart(2, "0")}
+                              {String(Math.floor(timer.elapsed / 60)).padStart(2, "0")}:{String(timer.elapsed % 60).padStart(2, "0")}
                             </div>
                           )}
 
                           {!isDone && (
-                            <button onClick={() => startTimer(task, p)} style={{
-                              background: isTracking ? p.color + "22" : "#1a1a1a",
-                              border: "1px solid " + (isTracking ? p.color : "#2a2a2a"),
-                              color: isTracking ? p.color : "#555",
-                              padding: "5px 12px", borderRadius: 8,
-                              fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
-                            }}>
+                            <button
+                              onClick={() => startTimer(task, p)}
+                              disabled={otherTimerActive}
+                              style={{
+                                background: isTracking ? p.color + "22" : "#1a1a1a",
+                                border: "1px solid " + (isTracking ? p.color : "#2a2a2a"),
+                                color: isTracking ? p.color : otherTimerActive ? "#333" : "#555",
+                                padding: "5px 12px", borderRadius: 8,
+                                fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
+                                opacity: otherTimerActive ? 0.4 : 1,
+                              }}
+                              title={otherTimerActive ? "Hay un timer activo en otro lado" : undefined}
+                            >
                               {isTracking ? "⏹ Stop" : "▶"}
                             </button>
                           )}

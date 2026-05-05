@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tarea, Proyecto } from "@/lib/types";
 import { today, minsToH } from "@/lib/utils";
+import { TimerState } from "./AppShell";
 
 interface TareasProps {
   initialTareas: Tarea[];
   proyectos: Proyecto[];
   onTareasChange: () => void;
   capacidadHoras?: number;
+  timer: TimerState;
 }
 
 const EMPTY_TAREA = {
@@ -49,16 +51,19 @@ const ESTADOS = [
   { key: "completada",  label: "Finalizadas",   color: "#7c9e6e" },
 ] as const;
 
-export default function Tareas({ initialTareas, proyectos, onTareasChange, capacidadHoras = 40 }: TareasProps) {
+export default function Tareas({ initialTareas, proyectos, onTareasChange, capacidadHoras = 40, timer }: TareasProps) {
   const supabase = createClient();
   const [tareas, setTareas] = useState<Tarea[]>(initialTareas);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const showError = (msg: string) => {
+    setErrorMsg(msg);
+    setTimeout(() => setErrorMsg(null), 4000);
+  };
 
   useEffect(() => { setTareas(initialTareas); }, [initialTareas]);
   const [showAdd, setShowAdd] = useState(false);
   const [newTarea, setNewTarea] = useState({ ...EMPTY_TAREA });
-  const [trackingId, setTrackingId] = useState<string | null>(null);
-  const [trackingStart, setTrackingStart] = useState<number | null>(null);
-  const [elapsed, setElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
   const [modalTab, setModalTab] = useState<"una" | "masiva">("una");
   const [bulkText, setBulkText] = useState("");
@@ -66,23 +71,53 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
   const [bulkFecha, setBulkFecha] = useState(today());
   const [bulkTiempo, setBulkTiempo] = useState(1);
 
-  // Vista
   const [view, setView] = useState<"kanban" | "semana">("kanban");
 
-  // Kanban states
   const [selectedProyecto, setSelectedProyecto] = useState<string>("todos");
   const [showProyectoMenu, setShowProyectoMenu] = useState(false);
   const [movingTask, setMovingTask] = useState<string | null>(null);
   const [confirmDeleteTask, setConfirmDeleteTask] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Semana states
+  const [rolloverDismissed, setRolloverDismissed] = useState(false);
+  const [rolloverSaving, setRolloverSaving] = useState(false);
+  const atrasadas = tareas.filter(t =>
+    (t.estado === "pendiente" || t.estado === "en_progreso") && t.fecha < today()
+  );
+
+  const rolloverToday = async () => {
+    if (atrasadas.length === 0) return;
+    setRolloverSaving(true);
+    const ids = atrasadas.map(t => t.id);
+    const { error } = await supabase.from("tareas").update({ fecha: today() }).in("id", ids);
+    if (!error) {
+      setTareas(ts => ts.map(t => ids.includes(t.id) ? { ...t, fecha: today() } : t));
+      setRolloverDismissed(true);
+      onTareasChange();
+    } else {
+      showError("No se pudieron mover las tareas. Intenta de nuevo.");
+    }
+    setRolloverSaving(false);
+  };
+
   const [weekOffset, setWeekOffset] = useState(0);
   const [quickAddDay, setQuickAddDay] = useState<string | null>(null);
+  const [movingToDay, setMovingToDay] = useState<string | null>(null);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null);
+
+  const moveTaskToDay = async (taskId: string, newDate: string) => {
+    const task = tareas.find(t => t.id === taskId);
+    if (!task || task.fecha === newDate) return;
+    setTareas(ts => ts.map(t => t.id === taskId ? { ...t, fecha: newDate } : t));
+    setMovingToDay(null);
+    const { error } = await supabase.from("tareas").update({ fecha: newDate }).eq("id", taskId);
+    if (error) showError("No se pudo mover la tarea.");
+    onTareasChange();
+  };
   const [quickTitulo, setQuickTitulo] = useState("");
   const [quickProyecto, setQuickProyecto] = useState("");
 
-  // Edición inline de tarjeta
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{
     titulo: string; proyecto_id: string; prioridad: string;
@@ -90,21 +125,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
     tiempo_real_h: number; tiempo_real_m: number;
   } | null>(null);
 
-  // Timer
-  useEffect(() => {
-    if (!trackingId || !trackingStart) return;
-    const iv = setInterval(() => setElapsed(Math.floor((Date.now() - trackingStart) / 1000)), 1000);
-    return () => clearInterval(iv);
-  }, [trackingId, trackingStart]);
-
-  // Escape para cerrar modal
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setShowAdd(false); setMovingTask(null); } };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Cerrar menú proyecto al click fuera
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowProyectoMenu(false);
@@ -113,36 +139,34 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Filtrar tareas por proyecto
   const filtered = selectedProyecto === "todos"
     ? tareas
     : tareas.filter(t => t.proyecto_id === selectedProyecto);
 
   const byEstado = (estado: string) => filtered.filter(t => t.estado === estado);
-
   const selectedProyectoObj = proyectos.find(p => p.id === selectedProyecto);
 
-  // Mover tarea de estado (auto-fecha al completar)
   const moveTask = async (tarea: Tarea, newEstado: string) => {
     const updates: Record<string, string> = { estado: newEstado };
     if (newEstado === "completada") updates.fecha = today();
     setTareas(ts => ts.map(t => t.id === tarea.id ? { ...t, ...updates } as Tarea : t));
-    await supabase.from("tareas").update(updates).eq("id", tarea.id);
+    const { error } = await supabase.from("tareas").update(updates).eq("id", tarea.id);
+    if (error) showError("No se pudo mover la tarea.");
     setMovingTask(null);
     onTareasChange();
   };
 
-  // Eliminar tarea
   const deleteTask = async (id: string) => {
     setTareas(ts => ts.filter(t => t.id !== id));
     setConfirmDeleteTask(null);
-    await supabase.from("tareas").delete().eq("id", id);
+    const { error } = await supabase.from("tareas").delete().eq("id", id);
+    if (error) showError("No se pudo eliminar la tarea.");
     onTareasChange();
   };
 
   const startTimer = useCallback(async (tarea: Tarea) => {
-    if (trackingId === tarea.id) {
-      const mins = Math.floor(elapsed / 60);
+    if (timer.trackingId === tarea.id) {
+      const mins = Math.floor(timer.elapsed / 60);
       const newReal = tarea.tiempo_real + mins;
       setTareas(ts => ts.map(t => t.id === tarea.id ? { ...t, tiempo_real: newReal } : t));
       await supabase.from("tareas").update({ tiempo_real: newReal }).eq("id", tarea.id);
@@ -153,12 +177,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
           await supabase.from("proyectos").update({ horas_logged: newHours }).eq("id", tarea.proyecto_id);
         }
       }
-      setTrackingId(null); setTrackingStart(null); setElapsed(0);
+      timer.stopTracking();
       onTareasChange();
-    } else {
-      setTrackingId(tarea.id); setTrackingStart(Date.now()); setElapsed(0);
+    } else if (!timer.trackingId) {
+      timer.startTracking(tarea.id);
     }
-  }, [trackingId, elapsed, supabase, proyectos, onTareasChange]);
+  }, [timer, supabase, proyectos, onTareasChange]);
 
   const quickAddTask = async (fecha: string) => {
     if (!quickTitulo.trim()) return;
@@ -175,6 +199,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
       setQuickTitulo(""); setQuickProyecto("");
       setQuickAddDay(null);
       onTareasChange();
+    } else if (error) {
+      showError("No se pudo crear la tarea.");
     }
     setSaving(false);
   };
@@ -213,6 +239,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
       setEditingTask(null);
       setEditForm(null);
       onTareasChange();
+    } else {
+      showError("No se pudo guardar. Intenta de nuevo.");
     }
     setSaving(false);
   };
@@ -238,6 +266,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
       setNewTarea({ ...EMPTY_TAREA });
       setShowAdd(false);
       onTareasChange();
+    } else if (error) {
+      showError("No se pudo crear la tarea. Intenta de nuevo.");
     }
     setSaving(false);
   };
@@ -261,6 +291,8 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
       setBulkText(""); setBulkProyecto(""); setBulkFecha(today()); setBulkTiempo(1);
       setShowAdd(false);
       onTareasChange();
+    } else if (error) {
+      showError("No se pudieron crear las tareas. Intenta de nuevo.");
     }
     setSaving(false);
   };
@@ -276,33 +308,78 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
   return (
     <div className="fade-up">
 
+      {/* Error toast */}
+      {errorMsg && <div className="error-toast">{errorMsg}</div>}
+
+      {/* ── Banner rollover ── */}
+      {atrasadas.length > 0 && !rolloverDismissed && (
+        <div style={{
+          background: "#c8922a0f", border: "1px solid #c8922a33",
+          borderRadius: 14, padding: "14px 20px", marginBottom: 20,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 16 }}>📋</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#c8922a", fontFamily: "Syne", marginBottom: 2 }}>
+                {atrasadas.length} tarea{atrasadas.length > 1 ? "s" : ""} pendiente{atrasadas.length > 1 ? "s" : ""} de días anteriores
+              </p>
+              <p style={{ fontSize: 11, color: "#c8922a", opacity: 0.7, fontFamily: "DM Mono" }}>
+                {atrasadas.map(t => t.titulo).slice(0, 3).join(" · ")}{atrasadas.length > 3 ? ` · +${atrasadas.length - 3} más` : ""}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={rolloverToday}
+              disabled={rolloverSaving}
+              style={{
+                background: "#c8922a", border: "none", color: "#0a0a0a",
+                padding: "8px 18px", borderRadius: 9,
+                fontSize: 12, fontFamily: "Syne", fontWeight: 700,
+              }}
+            >
+              {rolloverSaving ? "Moviendo..." : "Mover a hoy"}
+            </button>
+            <button
+              onClick={() => setRolloverDismissed(true)}
+              style={{
+                background: "transparent", border: "1px solid #c8922a44", color: "#c8922a",
+                padding: "8px 14px", borderRadius: 9,
+                fontSize: 12, fontFamily: "Syne", fontWeight: 600, opacity: 0.6,
+              }}
+            >
+              Ignorar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28 }}>Tareas</h2>
 
-          {/* Toggle Kanban / Semana */}
           <div style={{ display: "flex", gap: 2, background: "#111", border: "1px solid #1e1e1e", borderRadius: 10, padding: 3 }}>
             {(["kanban", "semana"] as const).map(v => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: "5px 14px", borderRadius: 8, border: "none",
                 background: view === v ? "#1e1e1e" : "transparent",
                 color: view === v ? "#c8922a" : "#555",
-                fontSize: 12, fontFamily: "Syne", fontWeight: 700, cursor: "pointer",
+                fontSize: 12, fontFamily: "Syne", fontWeight: 700,
               }}>
                 {v === "kanban" ? "Kanban" : "Semana"}
               </button>
             ))}
           </div>
 
-          {/* Selector de proyecto */}
           <div ref={menuRef} style={{ position: "relative" }}>
             <button
               onClick={() => setShowProyectoMenu(v => !v)}
               style={{
                 display: "flex", alignItems: "center", gap: 8,
                 background: "#111", border: "1px solid #2a2a2a", borderRadius: 10,
-                padding: "7px 14px", cursor: "pointer",
+                padding: "7px 14px",
               }}
             >
               {selectedProyectoObj
@@ -322,7 +399,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                   style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
                     background: selectedProyecto === "todos" ? "#1e1e1e" : "transparent",
                     border: "none", color: selectedProyecto === "todos" ? "#c8922a" : "#888",
-                    fontSize: 13, fontFamily: "Syne", fontWeight: 600, cursor: "pointer" }}>
+                    fontSize: 13, fontFamily: "Syne", fontWeight: 600 }}>
                   ○ Todos los proyectos
                 </button>
                 {proyectos.filter(p => p.estado !== "finalizado").map(p => (
@@ -330,7 +407,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                     style={{ width: "100%", textAlign: "left", padding: "8px 12px", borderRadius: 8,
                       background: selectedProyecto === p.id ? "#1e1e1e" : "transparent",
                       border: "none", color: selectedProyecto === p.id ? p.color : "#888",
-                      fontSize: 13, fontFamily: "Syne", fontWeight: 600, cursor: "pointer",
+                      fontSize: 13, fontFamily: "Syne", fontWeight: 600,
                       display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
                     {p.nombre}
@@ -350,41 +427,37 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
         </button>
       </div>
 
-      {/* ── Kanban ── */}
       {/* ── Vista Semana ── */}
       {view === "semana" && (() => {
         const weekDays = getWeekDays(weekOffset);
         const monthLabel = new Date(weekDays[0].date).toLocaleDateString("es-CO", { month: "long", year: "numeric" });
         return (
           <div>
-            {/* Navegación semana */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <button onClick={() => setWeekOffset(w => w - 1)} style={{
                 background: "#111", border: "1px solid #2a2a2a", color: "#666",
-                width: 32, height: 32, borderRadius: 8, fontSize: 16, cursor: "pointer",
+                width: 32, height: 32, borderRadius: 8, fontSize: 16,
               }}>‹</button>
               <span style={{ fontSize: 13, color: "#888", fontFamily: "DM Mono", textTransform: "capitalize", minWidth: 160, textAlign: "center" }}>
                 {monthLabel}
               </span>
               <button onClick={() => setWeekOffset(w => w + 1)} style={{
                 background: "#111", border: "1px solid #2a2a2a", color: "#666",
-                width: 32, height: 32, borderRadius: 8, fontSize: 16, cursor: "pointer",
+                width: 32, height: 32, borderRadius: 8, fontSize: 16,
               }}>›</button>
               {weekOffset !== 0 && (
                 <button onClick={() => setWeekOffset(0)} style={{
                   background: "transparent", border: "1px solid #2a2a2a", color: "#555",
-                  padding: "4px 12px", borderRadius: 8, fontSize: 11, fontFamily: "Syne", fontWeight: 600, cursor: "pointer",
+                  padding: "4px 12px", borderRadius: 8, fontSize: 11, fontFamily: "Syne", fontWeight: 600,
                 }}>Hoy</button>
               )}
             </div>
 
-            {/* Columnas por día */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 10, alignItems: "start" }}>
               {weekDays.map(({ date, label, isToday }) => {
                 const dayTasks = tareas.filter(t => t.fecha === date);
                 const isQuickAdd = quickAddDay === date;
 
-                // Capacidad y carga del día
                 const dailyCap = capacidadHoras / 5;
                 const dayWorked = dayTasks.filter(t => t.tiempo_real > 0).reduce((a, t) => a + t.tiempo_real / 60, 0);
                 const dayCommitted = dayTasks.filter(t => t.estado === "pendiente" || t.estado === "en_progreso").reduce((a, t) => a + t.tiempo_estimado / 60, 0);
@@ -392,9 +465,24 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                 const dayPct = Math.min(100, (dayTotal / dailyCap) * 100);
                 const barColor = dayPct >= 90 ? "#b05a5a" : dayPct >= 70 ? "#c8922a" : "#7c9e6e";
 
+                const isDragTarget = dragOverDate === date && draggedTaskId !== null;
                 return (
-                  <div key={date}>
-                    {/* Header día */}
+                  <div
+                    key={date}
+                    onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverDate(date); }}
+                    onDragLeave={e => { const rel = e.relatedTarget as Node | null; if (!rel || !e.currentTarget.contains(rel)) setDragOverDate(null); }}
+                    onDrop={e => {
+                      e.preventDefault();
+                      if (draggedTaskId) { moveTaskToDay(draggedTaskId, date); }
+                      setDraggedTaskId(null); setDragOverDate(null);
+                    }}
+                    style={{
+                      padding: "6px 4px", borderRadius: 12,
+                      background: isDragTarget ? "#c8922a08" : "transparent",
+                      border: isDragTarget ? "1px solid #c8922a44" : "1px solid transparent",
+                      transition: "background 0.15s, border-color 0.15s",
+                    }}
+                  >
                     <div style={{
                       textAlign: "center", marginBottom: 10, padding: "8px 4px",
                       borderRadius: 10,
@@ -402,7 +490,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                       border: isToday ? "1px solid #c8922a33" : "1px solid transparent",
                     }}>
                       <p style={{ fontSize: 11, fontFamily: "DM Mono", fontWeight: 700,
-                        color: isToday ? "#c8922a" : "#555",
+                        color: isToday ? "#c8922a" : "#666",
                         textTransform: "uppercase", letterSpacing: "0.08em" }}>
                         {label.split(" ")[0]}
                       </p>
@@ -410,7 +498,6 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                         color: isToday ? "#c8922a" : "#888", lineHeight: 1.2 }}>
                         {label.split(" ")[1]}
                       </p>
-                      {/* Barra de carga diaria */}
                       {dayTasks.length > 0 && (
                         <div style={{ marginTop: 6, padding: "0 4px" }}>
                           <div style={{ height: 3, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" }}>
@@ -423,34 +510,79 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                       )}
                     </div>
 
-                    {/* Tareas del día */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 6, minHeight: 60 }}>
                       {dayTasks.map(task => {
                         const proj = proyectos.find(p => p.id === task.proyecto_id);
                         const isDone = task.estado === "completada";
+                        const isMovingThis = movingToDay === task.id;
+                        const isBeingDragged = draggedTaskId === task.id;
                         return (
-                          <div key={task.id} style={{
-                            background: "#111", border: "1px solid " + (isDone ? "#1a1a1a" : "#1e1e1e"),
-                            borderRadius: 10, padding: "10px 12px",
-                            opacity: isDone ? 0.5 : 1,
-                          }}>
-                            {proj && <div style={{ height: 2, background: proj.color, borderRadius: 2, marginBottom: 6, opacity: 0.7 }} />}
-                            <p style={{
-                              fontSize: 12, fontWeight: 600, lineHeight: 1.3,
-                              color: isDone ? "#555" : "#ddd",
-                              textDecoration: isDone ? "line-through" : "none",
-                              marginBottom: 4,
-                            }}>{task.titulo}</p>
-                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                              {proj && <span style={{ fontSize: 9, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
-                              <span style={{ fontSize: 9, color: "#444", fontFamily: "DM Mono" }}>{minsToH(task.tiempo_estimado)}</span>
-                              {isDone && <span style={{ fontSize: 9, color: "#7c9e6e", fontFamily: "DM Mono" }}>✓</span>}
+                          <div
+                            key={task.id}
+                            style={{ position: "relative", opacity: isBeingDragged ? 0.35 : 1, transition: "opacity 0.15s", userSelect: "none" }}
+                            draggable={!isDone}
+                            onDragStart={e => {
+                              setDraggedTaskId(task.id);
+                              e.dataTransfer.effectAllowed = "move";
+                              e.dataTransfer.setData("text/plain", task.id);
+                            }}
+                            onDragEnd={() => { setDraggedTaskId(null); setDragOverDate(null); }}
+                          >
+                            <div style={{
+                              background: "#111", border: "1px solid " + (isDone ? "#1a1a1a" : "#1e1e1e"),
+                              borderRadius: 10, padding: "10px 12px",
+                              opacity: isDone ? 0.5 : 1,
+                              cursor: isDone ? "default" : "grab",
+                            }}>
+                              {proj && <div style={{ height: 2, background: proj.color, borderRadius: 2, marginBottom: 6, opacity: 0.7 }} />}
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 4 }}>
+                                <p style={{
+                                  fontSize: 12, fontWeight: 600, lineHeight: 1.3,
+                                  color: isDone ? "#555" : "#ddd",
+                                  textDecoration: isDone ? "line-through" : "none",
+                                  marginBottom: 4, flex: 1,
+                                }}>{task.titulo}</p>
+                                {!isDone && (
+                                  <button
+                                    onClick={() => setMovingToDay(isMovingThis ? null : task.id)}
+                                    style={{ background: "transparent", border: "none", color: "#555", fontSize: 14, padding: "0 2px", lineHeight: 1, flexShrink: 0 }}
+                                    title="Mover a otro día"
+                                  >⇄</button>
+                                )}
+                              </div>
+                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                {proj && <span style={{ fontSize: 9, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
+                                <span style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono" }}>{minsToH(task.tiempo_estimado)}</span>
+                                {isDone && <span style={{ fontSize: 9, color: "#7c9e6e", fontFamily: "DM Mono" }}>✓</span>}
+                              </div>
                             </div>
+                            {isMovingThis && (
+                              <div style={{
+                                position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+                                background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10,
+                                padding: 6, zIndex: 100, boxShadow: "0 8px 24px #00000088",
+                              }}>
+                                <p style={{ fontSize: 9, color: "#555", fontFamily: "DM Mono", textTransform: "uppercase", letterSpacing: "0.1em", padding: "4px 6px 6px" }}>Mover a</p>
+                                {weekDays.filter(d => d.date !== date).map(d => (
+                                  <button key={d.date} onClick={() => moveTaskToDay(task.id, d.date)} style={{
+                                    width: "100%", textAlign: "left", padding: "6px 10px", borderRadius: 7,
+                                    border: "none", background: "transparent", color: "#aaa",
+                                    fontSize: 11, fontFamily: "Syne", fontWeight: 600,
+                                    display: "flex", justifyContent: "space-between",
+                                  }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = "#2a2a2a")}
+                                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                                  >
+                                    <span>{d.label}</span>
+                                    {d.isToday && <span style={{ fontSize: 9, color: "#c8922a" }}>hoy</span>}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
 
-                      {/* Quick add */}
                       {isQuickAdd ? (
                         <div style={{ background: "#111", border: "1px solid #3a3a3a", borderRadius: 10, padding: 10 }}>
                           <input
@@ -475,11 +607,11 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             <button onClick={() => quickAddTask(date)} disabled={saving} style={{
                               flex: 1, background: "#c8922a22", border: "1px solid #c8922a66",
                               color: "#c8922a", borderRadius: 6, padding: "4px 0",
-                              fontSize: 11, fontFamily: "Syne", fontWeight: 700, cursor: "pointer",
+                              fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                             }}>Agregar</button>
                             <button onClick={() => { setQuickAddDay(null); setQuickTitulo(""); }} style={{
                               background: "transparent", border: "1px solid #2a2a2a", color: "#555",
-                              borderRadius: 6, padding: "4px 8px", fontSize: 11, cursor: "pointer",
+                              borderRadius: 6, padding: "4px 8px", fontSize: 11,
                             }}>✕</button>
                           </div>
                         </div>
@@ -489,7 +621,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                             width: "100%", background: "transparent",
                             border: "1px dashed #1e1e1e", borderRadius: 10,
                             color: "#333", padding: "8px 0", fontSize: 18,
-                            cursor: "pointer", transition: "all 0.15s",
+                            transition: "all 0.15s",
                           }}
                           onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = "#3a3a3a"; (e.target as HTMLElement).style.color = "#555"; }}
                           onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = "#1e1e1e"; (e.target as HTMLElement).style.color = "#333"; }}
@@ -510,43 +642,43 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
           const col = byEstado(key);
           return (
             <div key={key}>
-              {/* Columna header */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
                 <span style={{ fontSize: 11, color, fontFamily: "DM Mono", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   {label}
                 </span>
-                <span style={{ fontSize: 11, color: "#444", fontFamily: "DM Mono", marginLeft: 2 }}>{col.length}</span>
+                {/* Contador mejorado — visible */}
+                <span style={{
+                  fontSize: 10, color: "#888", fontFamily: "DM Mono",
+                  background: "#1a1a1a", padding: "1px 7px", borderRadius: 20, marginLeft: 2,
+                }}>{col.length}</span>
               </div>
 
-              {/* Tarjetas */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {col.length === 0 && (
                   <div style={{ border: "1px dashed #1e1e1e", borderRadius: 14, padding: "24px 16px", textAlign: "center" }}>
-                    <p style={{ fontSize: 12, color: "#333", fontFamily: "DM Mono" }}>Sin tareas</p>
+                    <p style={{ fontSize: 12, color: "#555", fontFamily: "DM Mono" }}>Sin tareas</p>
                   </div>
                 )}
 
                 {col.map(task => {
                   const proj = proyectos.find(p => p.id === task.proyecto_id);
-                  const isTracking = trackingId === task.id;
+                  const isTracking = timer.trackingId === task.id;
                   const isMoving = movingTask === task.id;
                   const accentColor = proj?.color || "#555";
-
                   const isEditing = editingTask === task.id;
+                  const otherTimerActive = timer.trackingId !== null && timer.trackingId !== task.id;
 
                   return (
-                    <div key={task.id} style={{
+                    <div key={task.id} className="task-card" style={{
                       background: "#111",
                       border: "1px solid " + (isTracking ? accentColor + "66" : isEditing ? "#3a3a3a" : "#1e1e1e"),
                       borderRadius: 14, padding: "14px 16px",
                       transition: "border-color 0.2s",
                     }}>
-                      {/* Barra de color del proyecto */}
                       {proj && <div style={{ height: 2, background: proj.color, borderRadius: 2, marginBottom: 10, opacity: 0.6 }} />}
 
                       {isEditing && editForm ? (
-                        /* ── Modo edición ── */
                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                           <input
                             value={editForm.titulo}
@@ -577,7 +709,6 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               style={{ background: "#0f0f0f", border: "1px solid #3a3a3a", borderRadius: 8,
                                 padding: "7px 10px", color: "#ddd", fontSize: 12, outline: "none", colorScheme: "dark" }} />
                           </div>
-                          {/* Tiempos */}
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                             <div>
                               <p style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono", marginBottom: 4 }}>Estimado</p>
@@ -620,7 +751,6 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               </div>
                             </div>
                           </div>
-                          {/* Botones guardar/cancelar */}
                           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                             <button onClick={() => saveEditTask(task)} disabled={saving} style={{
                               background: accentColor + "22", border: "1px solid " + accentColor + "66",
@@ -639,27 +769,25 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                           </div>
                         </div>
                       ) : (
-                        /* ── Modo vista ── */
                         <>
-                          {/* Título + botones editar/eliminar */}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 8 }}>
                             <p style={{ fontSize: 13, fontWeight: 700, color: key === "completada" ? "#555" : "#ddd",
                               textDecoration: key === "completada" ? "line-through" : "none", lineHeight: 1.4, flex: 1 }}>
                               {task.titulo}
                             </p>
-                            <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                            {/* Acciones hover — visibles solo al pasar el cursor */}
+                            <div className="task-actions" style={{ display: "flex", gap: 4, flexShrink: 0 }}>
                               <button onClick={() => openEditTask(task)} style={{
-                                background: "transparent", border: "none", color: "#444",
-                                fontSize: 13, cursor: "pointer", padding: "0 2px",
+                                background: "transparent", border: "none", color: "#888",
+                                fontSize: 14, padding: "2px 4px",
                               }} title="Editar">✎</button>
                               <button onClick={() => setConfirmDeleteTask(confirmDeleteTask === task.id ? null : task.id)} style={{
-                                background: "transparent", border: "none", color: "#444",
-                                fontSize: 14, cursor: "pointer", padding: "0 2px",
+                                background: "transparent", border: "none", color: "#888",
+                                fontSize: 16, padding: "2px 4px",
                               }} title="Eliminar">×</button>
                             </div>
                           </div>
 
-                          {/* Confirmación eliminar */}
                           {confirmDeleteTask === task.id && (
                             <div style={{ background: "#b05a5a12", border: "1px solid #b05a5a33",
                               borderRadius: 8, padding: "10px 12px", marginBottom: 10,
@@ -668,39 +796,43 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                               <div style={{ display: "flex", gap: 6 }}>
                                 <button onClick={() => setConfirmDeleteTask(null)} style={{
                                   background: "transparent", border: "1px solid #333", color: "#666",
-                                  padding: "3px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Syne", cursor: "pointer",
+                                  padding: "3px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Syne",
                                 }}>No</button>
                                 <button onClick={() => deleteTask(task.id)} style={{
                                   background: "#b05a5a22", border: "1px solid #b05a5a", color: "#b05a5a",
-                                  padding: "3px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Syne", fontWeight: 700, cursor: "pointer",
+                                  padding: "3px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Syne", fontWeight: 700,
                                 }}>Sí</button>
                               </div>
                             </div>
                           )}
 
-                          {/* Meta */}
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
                             {proj && <span style={{ fontSize: 10, color: proj.color, fontFamily: "DM Mono" }}>◆ {proj.nombre}</span>}
-                            <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
-                            {task.tiempo_real > 0 && <span style={{ fontSize: 10, color: "#666", fontFamily: "DM Mono" }}>Real: {minsToH(task.tiempo_real)}</span>}
+                            <span style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono" }}>Est: {minsToH(task.tiempo_estimado)}</span>
+                            {task.tiempo_real > 0 && <span style={{ fontSize: 10, color: "#777", fontFamily: "DM Mono" }}>Real: {minsToH(task.tiempo_real)}</span>}
                             {task.fecha && task.fecha !== today() && (
-                              <span style={{ fontSize: 10, color: "#444", fontFamily: "DM Mono" }}>{task.fecha}</span>
+                              <span style={{ fontSize: 10, color: "#555", fontFamily: "DM Mono" }}>{task.fecha}</span>
                             )}
                             {task.fecha === today() && <span style={{ fontSize: 10, color: accentColor, fontFamily: "DM Mono" }}>· hoy</span>}
                           </div>
 
-                          {/* Acciones */}
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                             {key !== "completada" && (
-                              <button onClick={() => startTimer(task)} style={{
-                                background: isTracking ? accentColor + "22" : "#1a1a1a",
-                                border: "1px solid " + (isTracking ? accentColor : "#2a2a2a"),
-                                color: isTracking ? accentColor : "#666",
-                                padding: "4px 10px", borderRadius: 7,
-                                fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
-                              }}>
+                              <button
+                                onClick={() => startTimer(task)}
+                                disabled={otherTimerActive}
+                                style={{
+                                  background: isTracking ? accentColor + "22" : "#1a1a1a",
+                                  border: "1px solid " + (isTracking ? accentColor : "#2a2a2a"),
+                                  color: isTracking ? accentColor : otherTimerActive ? "#333" : "#666",
+                                  padding: "4px 10px", borderRadius: 7,
+                                  fontSize: 11, fontFamily: "Syne", fontWeight: 700, whiteSpace: "nowrap",
+                                  opacity: otherTimerActive ? 0.4 : 1,
+                                }}
+                                title={otherTimerActive ? "Hay un timer activo en otro lado" : undefined}
+                              >
                                 {isTracking
-                                  ? `⏹ ${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`
+                                  ? `⏹ ${String(Math.floor(timer.elapsed / 60)).padStart(2, "0")}:${String(timer.elapsed % 60).padStart(2, "0")}`
                                   : "▶"}
                               </button>
                             )}
@@ -723,7 +855,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                                     <button key={e.key} onClick={() => moveTask(task, e.key)}
                                       style={{ width: "100%", textAlign: "left", padding: "7px 10px", borderRadius: 7,
                                         border: "none", background: "transparent", color: e.color,
-                                        fontSize: 12, fontFamily: "Syne", fontWeight: 600, cursor: "pointer",
+                                        fontSize: 12, fontFamily: "Syne", fontWeight: 600,
                                         display: "flex", alignItems: "center", gap: 8 }}>
                                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: e.color }} />
                                       {e.label}
@@ -761,21 +893,19 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
               Nueva tarea
             </h3>
 
-            {/* Tabs */}
             <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#0f0f0f", borderRadius: 10, padding: 4 }}>
               {(["una", "masiva"] as const).map(tab => (
                 <button key={tab} onClick={() => setModalTab(tab)} style={{
                   flex: 1, padding: "8px 0", borderRadius: 8, border: "none",
                   background: modalTab === tab ? "#1e1e1e" : "transparent",
                   color: modalTab === tab ? "#c8922a" : "#555",
-                  fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 700, cursor: "pointer",
+                  fontSize: 13, fontFamily: "'Syne', sans-serif", fontWeight: 700,
                 }}>
                   {tab === "una" ? "Una tarea" : "Carga masiva"}
                 </button>
               ))}
             </div>
 
-            {/* Una tarea */}
             {modalTab === "una" && (
               <>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -804,12 +934,12 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <div>
-                      <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo estimado (h)</label>
+                      <label style={{ fontSize: 11, color: "#666", display: "block", marginBottom: 6 }}>Tiempo estimado (h)</label>
                       <input type="number" min="0" step="0.5" value={newTarea.tiempo_estimado}
                         onChange={e => setNewTarea({ ...newTarea, tiempo_estimado: Number(e.target.value) })} style={field} />
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, color: "#555", display: "block", marginBottom: 6 }}>Tiempo real (h)</label>
+                      <label style={{ fontSize: 11, color: "#666", display: "block", marginBottom: 6 }}>Tiempo real (h)</label>
                       <input type="number" min="0" step="0.5" value={newTarea.tiempo_real || ""}
                         onChange={e => setNewTarea({ ...newTarea, tiempo_real: Number(e.target.value) })} style={field} />
                     </div>
@@ -832,10 +962,9 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
               </>
             )}
 
-            {/* Carga masiva */}
             {modalTab === "masiva" && (
               <>
-                <p style={{ fontSize: 12, color: "#555", marginBottom: 16, fontFamily: "'DM Mono', monospace", lineHeight: 1.6 }}>
+                <p style={{ fontSize: 12, color: "#666", marginBottom: 16, fontFamily: "'DM Mono', monospace", lineHeight: 1.6 }}>
                   Pega o escribe una tarea por línea.
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -849,7 +978,7 @@ export default function Tareas({ initialTareas, proyectos, onTareasChange, capac
                     </select>
                     <input type="date" value={bulkFecha} onChange={e => setBulkFecha(e.target.value)} style={{ ...field, colorScheme: "dark" }} />
                     <div>
-                      <label style={{ fontSize: 10, color: "#555", display: "block", marginBottom: 6 }}>h/tarea</label>
+                      <label style={{ fontSize: 10, color: "#666", display: "block", marginBottom: 6 }}>h/tarea</label>
                       <input type="number" min="0.5" step="0.5" value={bulkTiempo}
                         onChange={e => setBulkTiempo(Number(e.target.value))} style={field} />
                     </div>

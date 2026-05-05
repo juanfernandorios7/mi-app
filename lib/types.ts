@@ -51,13 +51,27 @@ export interface Tarea {
   proyectos?: Proyecto;
 }
 
-export interface Formacion {
+export type CursoEstado = "activo" | "pausado" | "completado";
+
+export interface Curso {
   id: string;
-  tema: string;
+  nombre: string;
+  descripcion?: string;
   area: string;
+  estado: CursoEstado;
+  color: string;
+  fecha_inicio?: string;
+  fecha_fin?: string;
+  created_at: string;
+}
+
+export interface SesionFormacion {
+  id: string;
+  curso_id: string;
+  titulo: string;
   fecha: string;
-  tiempo_estimado: number;
-  tiempo_real: number;
+  tiempo_estimado: number; // minutos
+  tiempo_real: number;     // minutos
   notas?: string;
   created_at: string;
 }

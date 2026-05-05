@@ -1,5 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
 
+:root {
+  --gold:    #c8922a;
+  --green:   #7c9e6e;
+  --blue:    #6e8eb0;
+  --red:     #b05a5a;
+  --purple:  #a06e9e;
+
+  --gold-bg:     #c8922a12;
+  --gold-border: #c8922a33;
+  --green-bg:    #7c9e6e12;
+  --green-border:#7c9e6e33;
+  --red-bg:      #b05a5a12;
+  --red-border:  #b05a5a33;
+
+  --s0: #0a0a0a;
+  --s1: #0f0f0f;
+  --s2: #111;
+  --s3: #141414;
+  --s4: #1a1a1a;
+  --s5: #1e1e1e;
+  --s6: #2a2a2a;
+  --s7: #3a3a3a;
+
+  --text-primary:   #e8e0d0;
+  --text-secondary: #888;
+  --text-tertiary:  #666;
+  --text-muted:     #555;
+  --text-ghost:     #444;
+
+  --container: 960px;
+  --container-wide: 1280px;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -80,4 +113,29 @@ textarea:focus {
 button {
   cursor: pointer;
   transition: all 0.15s;
+}
+
+/* Task card hover actions */
+.task-card .task-actions {
+  opacity: 0.3;
+  transition: opacity 0.15s;
+}
+.task-card:hover .task-actions {
+  opacity: 1;
+}
+
+/* Error toast */
+.error-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--red-bg);
+  border: 1px solid var(--red-border);
+  border-radius: 12px;
+  padding: 12px 18px;
+  z-index: 1000;
+  color: var(--red);
+  font-size: 13px;
+  font-family: 'Syne', sans-serif;
+  animation: fadeUp 0.3s ease;
 }

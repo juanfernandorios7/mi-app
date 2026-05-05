@@ -1,6 +1,6 @@
 "use client";
 
-type View = "dashboard" | "tareas" | "proyectos";
+type View = "dashboard" | "tareas" | "proyectos" | "formacion";
 
 interface HeaderProps {
   view: View;
@@ -12,6 +12,7 @@ const NAV_ITEMS: [View, string][] = [
   ["dashboard", "Dashboard"],
   ["tareas", "Tareas"],
   ["proyectos", "Proyectos"],
+  ["formacion", "Formación"],
 ];
 
 export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
@@ -23,7 +24,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
 
   return (
     <header style={{
-      borderBottom: "1px solid #1e1e1e",
+      borderBottom: "2px solid #c8922a",
       padding: "0 28px",
       display: "flex",
       alignItems: "center",
@@ -47,6 +48,13 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
         }}>
           Juanfer OS
         </span>
+        <span style={{
+          background: "#b05a5a", color: "#fff",
+          fontSize: 11, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          padding: "3px 10px", borderRadius: 20,
+        }}>
+          esto es una prueba
+        </span>
       </div>
 
       <nav style={{ display: "flex", gap: 4 }}>
@@ -57,7 +65,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
             style={{
               background: view === key ? "#1a1a1a" : "transparent",
               border: view === key ? "1px solid #2a2a2a" : "1px solid transparent",
-              color: view === key ? "#c8922a" : "#666",
+              color: view === key ? "#c8922a" : "#aaa",
               padding: "6px 14px",
               borderRadius: 8,
               fontSize: 13,
@@ -72,13 +80,13 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
       </nav>
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#444" }}>
+        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#aaa" }}>
           {dateStr}
         </div>
         <button
           onClick={onSignOut}
           style={{
-            background: "transparent", border: "1px solid #222", color: "#555",
+            background: "transparent", border: "1px solid #3a3a3a", color: "#999",
             padding: "5px 12px", borderRadius: 8, fontSize: 12,
             fontFamily: "'Syne', sans-serif", fontWeight: 600,
           }}
