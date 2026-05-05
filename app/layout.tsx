@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Juanfer OS",
-  description: "Sistema de productividad personal",
+  title: "Navva",
+  description: "Trabaja mejor. Gana más. Vive con libertad.",
 };
 
 export default function RootLayout({

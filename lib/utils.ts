@@ -47,9 +47,9 @@ export function getAlertaDuracion(project: Proyecto): { nivel: "ok" | "warning" 
 }
 
 export function getCapacityStatus(pct: number) {
-  if (pct >= 90) return { label: "Delega ya",           color: "#b05a5a", pulse: true  };
-  if (pct >= 70) return { label: "Considera delegar",   color: "#c8922a", pulse: false };
-  return             { label: "Tienes espacio",         color: "#7c9e6e", pulse: false };
+  if (pct >= 90) return { label: "Es hora de delegar",        color: "#b05a5a", pulse: true  };
+  if (pct >= 70) return { label: "Cuida tu energía",          color: "#c8922a", pulse: false };
+  return             { label: "Tienes espacio — úsalo bien", color: "#7c9e6e", pulse: false };
 }
 
 export const ACCENT_COLORS = ["#c8922a", "#7c9e6e", "#6e8eb0", "#a06e9e", "#b05a5a"];

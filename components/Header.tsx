@@ -46,7 +46,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
           letterSpacing: "-0.5px",
           color: "#e8e0d0",
         }}>
-          Juanfer OS
+          Navva
         </span>
       </div>
 

@@ -47,7 +47,7 @@ export default function LoginPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 40 }}>
           <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#c8922a", boxShadow: "0 0 8px #c8922a88" }} />
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, letterSpacing: "-0.5px", color: "#e8e0d0" }}>
-            Juanfer OS
+            Navva
           </span>
         </div>
 
@@ -63,9 +63,9 @@ export default function LoginPage() {
         ) : (
           <form onSubmit={handleMagicLink}>
             <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, marginBottom: 8, color: "#e8e0d0" }}>
-              Bienvenido
+              Bienvenido de vuelta
             </p>
-            <p style={{ fontSize: 13, color: "#555", marginBottom: 28 }}>Acceso exclusivo — solo para ti.</p>
+            <p style={{ fontSize: 13, color: "#888", marginBottom: 28, lineHeight: 1.6 }}>Tu negocio, tu tiempo, tu vida.</p>
 
             <div style={{ marginBottom: 14 }}>
               <input

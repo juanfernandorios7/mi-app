@@ -185,9 +185,9 @@ export default function Dashboard({ proyectos, tareas, capacidadHoras }: Dashboa
   const capacidadSemanal = capacidadHoras;
   const pctSemana = Math.round((horasSemanales / capacidadSemanal) * 100);
   const saturacion = pctSemana >= 95
-    ? { color: "#b05a5a", bg: "#b05a5a12", border: "#b05a5a33", emoji: "🔴", msg: "Estás saturado — antes de aceptar algo nuevo, ¿qué puedes mover o delegar?" }
+    ? { color: "#b05a5a", bg: "#b05a5a12", border: "#b05a5a33", emoji: "🔴", msg: "Ya es suficiente. Tu tiempo libre también importa — ¿qué puedes mover, delegar o simplemente no hacer?" }
     : pctSemana >= 80
-    ? { color: "#c8922a", bg: "#c8922a12", border: "#c8922a33", emoji: "🟡", msg: "Estás cerca del límite — evalúa qué puede esperar o delegar." }
+    ? { color: "#c8922a", bg: "#c8922a12", border: "#c8922a33", emoji: "🟡", msg: "Vas bien, pero estás cerca del límite. Protege el espacio que te queda." }
     : null;
 
   const CAPACITY_HOURS = capacidadHoras;
