@@ -32,7 +32,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
       height: 60,
       position: "sticky",
       top: 0,
-      background: "#1a1510",
+      background: "#FAF7F3",
       zIndex: 50,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -58,7 +58,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
             style={{
               background: view === key ? "#F5F1EC" : "transparent",
               border: view === key ? "1px solid #D4C9BC" : "1px solid transparent",
-              color: view === key ? "#c8922a" : "#aaa",
+              color: view === key ? "#c8922a" : "#6b6258",
               padding: "6px 14px",
               borderRadius: 8,
               fontSize: 13,
@@ -73,7 +73,7 @@ export default function Header({ view, onViewChange, onSignOut }: HeaderProps) {
       </nav>
 
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#aaa" }}>
+        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#6b6258" }}>
           {dateStr}
         </div>
         <button
